@@ -55,45 +55,17 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
 
     RGB_IMAGE img_0(rows, cols);
     RGB_IMAGE img_1(rows, cols);
-    GRAY_IMAGE img_2(rows, cols);
-    GRAY_IMAGE img_3(rows, cols);
+    RGB_IMAGE img_2(rows, cols);
+    RGB_IMAGE img_3(rows, cols);
     RGB_IMAGE img_4(rows, cols);
     RGB_IMAGE img_5(rows, cols);
-    GRAY_IMAGE img_r_1(rows, cols);
-    GRAY_IMAGE img_g_1(rows, cols);
-    GRAY_IMAGE img_b_1(rows, cols);
-    GRAY_IMAGE img_r_2(rows, cols);
-    GRAY_IMAGE img_g_2(rows, cols);
-    GRAY_IMAGE img_b_2(rows, cols);
     RGB_PIXEL pix(50, 50, 50);
 #pragma HLS dataflow
-
-    hls::AXIvideo2Mat(input, img_0); // input (AXI4) -> img_0 (hls::Mat)
-
-
-    hls::Split(img_0, img_b_1, img_g_1, img_r_1); 
-    
-    hls::Threshold(img_b_1, img_b_2, 60, 255, 0);
-    hls::Threshold(img_g_1, img_g_2, 60, 255, 0);
-    hls::Threshold(img_r_1, img_r_2, 60, 255, 0);
-
-    hls::CvtColor<HLS_GRAY2RGB>(img_b_2, img_1);
-
-    hls::Mat2AXIvideo(img_1, output);
-
-    //hls::GaussianBlur<5, 5>(img_0, img_1, (double)1.0, (double)1.0);
-    //hls::CvtColor<HLS_RGB2GRAY, rows, cols, >(img_0, img_1, HLS_RGB2GRAY);
-    //hls::CvtColor<HLS_RGB2GRAY>(img_1, img_2);
-    //hls::Threshold<>(img_2, img_3, 127, 255, 0);
-    //hls::CvtColor<HLS_GRAY2RGB>(img_r_1, img_r_2);
-
-/*
-    hls::Sobel<1,0,3>(img_0, img_1); 
+    hls::AXIvideo2Mat(input, img_0);
+    hls::Sobel<1,0,3>(img_0, img_1);
     hls::SubS(img_1, pix, img_2);
     hls::Scale(img_2, img_3, 2, 0);
     hls::Erode(img_3, img_4);
     hls::Dilate(img_4, img_5);
     hls::Mat2AXIvideo(img_5, output);
-*/
-
 }

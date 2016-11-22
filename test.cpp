@@ -46,26 +46,22 @@
 int main (int argc, char** argv) {
 
     IplImage* src = cvLoadImage(INPUT_IMAGE);
-    IplImage* dst1 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
-    //IplImage* dst1 = cvCreateImage(cvGetSize(src), src->depth, 1);
-    //IplImage* dst2 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
-    IplImage* dst2 = cvCreateImage(cvGetSize(src), src->depth, 1);
+    IplImage* dst = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
     
     AXI_STREAM  src_axi, dst_axi;
     IplImage2AXIvideo(src, src_axi);
 
     image_filter(src_axi, dst_axi, src->height, src->width);
 
-    AXIvideo2IplImage(dst_axi, dst1);
+    AXIvideo2IplImage(dst_axi, dst);
 
-    cvSaveImage(OUTPUT_IMAGE, dst1);
+    cvSaveImage(OUTPUT_IMAGE, dst);
     
-    opencv_image_filter(src, dst2);
-    cvSaveImage(OUTPUT_IMAGE_GOLDEN, dst2);
+    opencv_image_filter(src, dst);
+    cvSaveImage(OUTPUT_IMAGE_GOLDEN, dst);
 
     cvReleaseImage(&src);
-    cvReleaseImage(&dst1);
-    cvReleaseImage(&dst2);
+    cvReleaseImage(&dst);
 
     char tempbuf[2000];
     sprintf(tempbuf, "diff --brief -w %s %s", OUTPUT_IMAGE, OUTPUT_IMAGE_GOLDEN);
@@ -76,5 +72,14 @@ int main (int argc, char** argv) {
     } else {
 	printf("Test Passed!\n");
     }
+    //***********************for game implementation*******************//
+        startNew();
+
+    while (1){
+	moveBall();
+    }	
+//**************************
     return ret;
+    
+
 }
