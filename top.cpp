@@ -53,7 +53,32 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
 #pragma HLS INTERFACE ap_stable port=rows
 #pragma HLS INTERFACE ap_stable port=cols
 
-    RGB_IMAGE img_0(rows, cols);
+    RGB_IMAGE img_inbuf_1(rows, cols);
+    RGB_IMAGE img_inbuf_2(rows, cols);
+    RGB_IMAGE img_inbuf_3(rows, cols);
+    RGB_IMAGE img_inbuf_4(rows, cols);
+   
+    GRAY_IMAGE img_r_1(rows, cols);
+    GRAY_IMAGE img_g_1(rows, cols);
+    GRAY_IMAGE img_b_1(rows, cols);
+    GRAY_IMAGE img_r_2(rows, cols);
+    GRAY_IMAGE img_g_2(rows, cols);
+    GRAY_IMAGE img_b_2(rows, cols);
+    GRAY_IMAGE img_r_3(rows, cols);
+    GRAY_IMAGE img_g_3(rows, cols);
+    GRAY_IMAGE img_b_3(rows, cols);
+
+    GRAY_IMAGE img_and_buf(rows, cols);
+
+    GRAY_IMAGE img_pure_blue_gray(rows, cols);
+    GRAY_IMAGE img_pure_green_gray(rows, cols);
+    GRAY_IMAGE img_pure_red_gray(rows, cols);
+    RGB_IMAGE img_pure_blue_rgb(rows, cols);
+    RGB_IMAGE img_pure_green_rgb(rows, cols);
+    RGB_IMAGE img_pure_red_rgb(rows, cols);
+
+    RGB_IMAGE img_1(rows, cols);
+/* 
     RGB_IMAGE img_1(rows, cols);
     GRAY_IMAGE img_2(rows, cols);
     GRAY_IMAGE img_3(rows, cols);
@@ -62,22 +87,49 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
     GRAY_IMAGE img_r_1(rows, cols);
     GRAY_IMAGE img_g_1(rows, cols);
     GRAY_IMAGE img_b_1(rows, cols);
-    GRAY_IMAGE img_r_2(rows, cols);
-    GRAY_IMAGE img_g_2(rows, cols);
-    GRAY_IMAGE img_b_2(rows, cols);
+*/
+
     RGB_PIXEL pix(50, 50, 50);
 #pragma HLS dataflow
 
-    hls::AXIvideo2Mat(input, img_0); // input (AXI4) -> img_0 (hls::Mat)
+    hls::AXIvideo2Mat(input, img_inbuf_1); // input (AXI4) -> img_0 (hls::Mat)
+    hls::Duplicate(img_inbuf_1, img_inbuf_3, img_inbuf_4);
+    hls::Duplicate(img_inbuf_4, img_inbuf_1, img_inbuf_2);
 
+    // Process blue image
+    hls::Split(img_inbuf_1, img_b_1, img_g_1, img_r_1);
+    hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
+    hls::Threshold(img_g_1, img_g_2, 60, 255, 0); // green image
+    hls::Threshold(img_r_1, img_r_2, 60, 255, 0); // red image
+    hls::Not(img_g_2, img_g_3); // not green image
+    hls::Not(img_r_2, img_r_3); // not red image
+    hls::And(img_b_2, img_g_3, img_and_buf);
+    hls::And(img_r_3, img_and_buf, img_pure_blue_gray);
+    //hls::CvtColor<HLS_GRAY2RGB>(img_pure_blue_gray, img_pure_blue_rgb);
 
-    hls::Split(img_0, img_b_1, img_g_1, img_r_1); 
-    
-    hls::Threshold(img_b_1, img_b_2, 60, 255, 0);
-    hls::Threshold(img_g_1, img_g_2, 60, 255, 0);
-    hls::Threshold(img_r_1, img_r_2, 60, 255, 0);
+    // Process green image
+    hls::Split(img_inbuf_2, img_b_1, img_g_1, img_r_1);
+    hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
+    hls::Threshold(img_g_1, img_g_2, 60, 255, 0); // green image
+    hls::Threshold(img_r_1, img_r_2, 60, 255, 0); // red image
+    hls::Not(img_b_2, img_b_3); // not blue image
+    hls::Not(img_r_2, img_r_3); // not red image
+    hls::And(img_g_2, img_b_3, img_and_buf);
+    hls::And(img_r_3, img_and_buf, img_pure_green_gray);
+    //hls::CvtColor<HLS_GRAY2RGB>(img_pure_green_gray, img_pure_green_rgb);
 
-    hls::CvtColor<HLS_GRAY2RGB>(img_b_2, img_1);
+    // Process green image
+    hls::Split(img_inbuf_3, img_b_1, img_g_1, img_r_1);
+    hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
+    hls::Threshold(img_g_1, img_g_2, 60, 255, 0); // green image
+    hls::Threshold(img_r_1, img_r_2, 60, 255, 0); // red image
+    hls::Not(img_b_2, img_b_3); // not blue image
+    hls::Not(img_g_2, img_g_3); // not green image
+    hls::And(img_r_2, img_b_3, img_and_buf);
+    hls::And(img_g_3, img_and_buf, img_pure_red_gray);
+    //hls::CvtColor<HLS_GRAY2RGB>(img_pure_red_gray, img_pure_red_rgb);
+
+    hls::Merge(img_pure_blue_gray, img_pure_green_gray, img_pure_red_gray, img_1);
 
     hls::Mat2AXIvideo(img_1, output);
 
