@@ -78,16 +78,6 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
     RGB_IMAGE img_pure_red_rgb(rows, cols);
 
     RGB_IMAGE img_1(rows, cols);
-/* 
-    RGB_IMAGE img_1(rows, cols);
-    GRAY_IMAGE img_2(rows, cols);
-    GRAY_IMAGE img_3(rows, cols);
-    RGB_IMAGE img_4(rows, cols);
-    RGB_IMAGE img_5(rows, cols);
-    GRAY_IMAGE img_r_1(rows, cols);
-    GRAY_IMAGE img_g_1(rows, cols);
-    GRAY_IMAGE img_b_1(rows, cols);
-*/
 
     RGB_PIXEL pix(50, 50, 50);
 #pragma HLS dataflow
