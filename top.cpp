@@ -59,7 +59,7 @@
 /*
  * Converts an RGB image to detect green. Outputs a single channel (grayscale) image.
  */
-void green_filter (RGB_Image& input, GRAY_IMAGE& output, int rows, int cols) {
+void green_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
 
     GRAY_IMAGE img_r_1(rows, cols);
     GRAY_IMAGE img_g_1(rows, cols);
@@ -70,7 +70,6 @@ void green_filter (RGB_Image& input, GRAY_IMAGE& output, int rows, int cols) {
     GRAY_IMAGE img_r_3(rows, cols);
     GRAY_IMAGE img_b_3(rows, cols);
     GRAY_IMAGE img_and_buf(rows, cols);
-    GRAY_IMAGE img_green_gs(rows, cols);
 
     hls::Split(input, img_b_1, img_g_1, img_r_1);
     hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
@@ -79,7 +78,7 @@ void green_filter (RGB_Image& input, GRAY_IMAGE& output, int rows, int cols) {
     hls::Not(img_b_2, img_b_3); // not blue image
     hls::Not(img_r_2, img_r_3); // not red image
     hls::And(img_g_2, img_b_3, img_and_buf);
-    hls::And(img_r_3, img_and_buf, img_green_gs);
+    hls::And(img_r_3, img_and_buf, output);
 
 }
 
@@ -87,7 +86,7 @@ void green_filter (RGB_Image& input, GRAY_IMAGE& output, int rows, int cols) {
 /*
  * Converts an RGB image to detect blue. Outputs a single channel (grayscale) image.
  */
-void blue_filter (RGB_Image& input, GRAY_IMAGE& output, int rows, int cols) {
+void blue_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
 
     GRAY_IMAGE img_r_1(rows, cols);
     GRAY_IMAGE img_g_1(rows, cols);
@@ -98,7 +97,6 @@ void blue_filter (RGB_Image& input, GRAY_IMAGE& output, int rows, int cols) {
     GRAY_IMAGE img_r_3(rows, cols);
     GRAY_IMAGE img_g_3(rows, cols);
     GRAY_IMAGE img_and_buf(rows, cols);
-    GRAY_IMAGE img_green_gs(rows, cols);
 
     hls::Split(input, img_b_1, img_g_1, img_r_1);
     hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
@@ -107,7 +105,7 @@ void blue_filter (RGB_Image& input, GRAY_IMAGE& output, int rows, int cols) {
     hls::Not(img_r_2, img_r_3); // not red image
     hls::Not(img_g_2, img_g_3); // not green image
     hls::And(img_b_2, img_r_3, img_and_buf);
-    hls::And(img_g_3, img_and_buf, img_blue_gs);
+    hls::And(img_g_3, img_and_buf, output);
 
 }
 
@@ -117,7 +115,10 @@ void blue_filter (RGB_Image& input, GRAY_IMAGE& output, int rows, int cols) {
 
 
 
-/*
+
+
+
+
 void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
     //Create AXI streaming interfaces for the core
 #pragma HLS RESOURCE variable=input core=AXIS metadata="-bus_bundle INPUT_STREAM"
@@ -205,7 +206,7 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
     //hls::CvtColor<HLS_RGB2GRAY>(img_1, img_2);
     //hls::Threshold<>(img_2, img_3, 127, 255, 0);
     //hls::CvtColor<HLS_GRAY2RGB>(img_r_1, img_r_2);
-*/
+}
 
 /*
     hls::Sobel<1,0,3>(img_0, img_1); 
@@ -214,6 +215,5 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
     hls::Erode(img_3, img_4);
     hls::Dilate(img_4, img_5);
     hls::Mat2AXIvideo(img_5, output);
-*/
-
 }
+*/
