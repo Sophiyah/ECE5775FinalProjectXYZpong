@@ -1,4 +1,17 @@
 /***************************************************************************
+* ECE 5775 (Fall 2016) - Final Project
+* Project Name - Game of Pong with Augumented Realiy
+* Authors - Albert Xu (awx2), Sophia Yan (sjy33), Man Zhang (mz338)
+*
+* This project references 2 other sources.
+* (1) Tutorial from Xilinx - Accelerating OpenCV Applications with Zynq-7000 
+*     All Programmable SoC using Vivado HLS Video Libraries
+* (2) Corner Detection Algorithm of ECE 5775 (Fall 2014) by Aashish Agarwal, 
+*     Asha Ganesan, and Mohit Yogesh Modi
+***************************************************************************/
+
+
+/***************************************************************************
 
 *   © Copyright 2013 Xilinx, Inc. All rights reserved. 
 
@@ -39,8 +52,72 @@
 *   ALL TIMES.
 
 ***************************************************************************/
+
+
 #include "top.h"
 
+/*
+ * Converts an RGB image to detect green. Outputs a single channel (grayscale) image.
+ */
+void green_filter (RGB_Image& input, GRAY_IMAGE& output, int rows, int cols) {
+
+    GRAY_IMAGE img_r_1(rows, cols);
+    GRAY_IMAGE img_g_1(rows, cols);
+    GRAY_IMAGE img_b_1(rows, cols);
+    GRAY_IMAGE img_r_2(rows, cols);
+    GRAY_IMAGE img_g_2(rows, cols);
+    GRAY_IMAGE img_b_2(rows, cols);
+    GRAY_IMAGE img_r_3(rows, cols);
+    GRAY_IMAGE img_b_3(rows, cols);
+    GRAY_IMAGE img_and_buf(rows, cols);
+    GRAY_IMAGE img_green_gs(rows, cols);
+
+    hls::Split(input, img_b_1, img_g_1, img_r_1);
+    hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
+    hls::Threshold(img_g_1, img_g_2, 60, 255, 0); // green image
+    hls::Threshold(img_r_1, img_r_2, 60, 255, 0); // red image
+    hls::Not(img_b_2, img_b_3); // not blue image
+    hls::Not(img_r_2, img_r_3); // not red image
+    hls::And(img_g_2, img_b_3, img_and_buf);
+    hls::And(img_r_3, img_and_buf, img_green_gs);
+
+}
+
+
+/*
+ * Converts an RGB image to detect blue. Outputs a single channel (grayscale) image.
+ */
+void blue_filter (RGB_Image& input, GRAY_IMAGE& output, int rows, int cols) {
+
+    GRAY_IMAGE img_r_1(rows, cols);
+    GRAY_IMAGE img_g_1(rows, cols);
+    GRAY_IMAGE img_b_1(rows, cols);
+    GRAY_IMAGE img_r_2(rows, cols);
+    GRAY_IMAGE img_g_2(rows, cols);
+    GRAY_IMAGE img_b_2(rows, cols);
+    GRAY_IMAGE img_r_3(rows, cols);
+    GRAY_IMAGE img_g_3(rows, cols);
+    GRAY_IMAGE img_and_buf(rows, cols);
+    GRAY_IMAGE img_green_gs(rows, cols);
+
+    hls::Split(input, img_b_1, img_g_1, img_r_1);
+    hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
+    hls::Threshold(img_g_1, img_g_2, 60, 255, 0); // green image
+    hls::Threshold(img_r_1, img_r_2, 60, 255, 0); // red image
+    hls::Not(img_r_2, img_r_3); // not red image
+    hls::Not(img_g_2, img_g_3); // not green image
+    hls::And(img_b_2, img_r_3, img_and_buf);
+    hls::And(img_g_3, img_and_buf, img_blue_gs);
+
+}
+
+
+
+
+
+
+
+/*
 void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
     //Create AXI streaming interfaces for the core
 #pragma HLS RESOURCE variable=input core=AXIS metadata="-bus_bundle INPUT_STREAM"
@@ -128,6 +205,7 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
     //hls::CvtColor<HLS_RGB2GRAY>(img_1, img_2);
     //hls::Threshold<>(img_2, img_3, 127, 255, 0);
     //hls::CvtColor<HLS_GRAY2RGB>(img_r_1, img_r_2);
+*/
 
 /*
     hls::Sobel<1,0,3>(img_0, img_1); 
