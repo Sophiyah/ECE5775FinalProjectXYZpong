@@ -56,6 +56,35 @@
 
 #include "top.h"
 
+
+
+/*
+ * Converts an RGB image to detect red. Outputs a single channel (grayscale) image.
+ */
+void red_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
+
+    GRAY_IMAGE img_r_1(rows, cols);
+    GRAY_IMAGE img_g_1(rows, cols);
+    GRAY_IMAGE img_b_1(rows, cols);
+    GRAY_IMAGE img_r_2(rows, cols);
+    GRAY_IMAGE img_g_2(rows, cols);
+    GRAY_IMAGE img_b_2(rows, cols);
+    GRAY_IMAGE img_g_3(rows, cols);
+    GRAY_IMAGE img_b_3(rows, cols);
+    GRAY_IMAGE img_and_buf(rows, cols);
+
+    hls::Split(input, img_b_1, img_g_1, img_r_1);
+    hls::Threshold(img_r_1, img_r_2, 60, 255, 0); // red image
+    hls::Threshold(img_g_1, img_g_2, 20, 255, 0); // green image
+    hls::Threshold(img_b_1, img_b_2, 40, 255, 0); // blue image
+    hls::Not(img_g_2, img_g_3); // not green image
+    hls::Not(img_b_2, img_b_3); // not blue image
+    hls::And(img_r_2, img_g_3, img_and_buf);
+    hls::And(img_b_3, img_and_buf, output);
+
+}
+
+
 /*
  * Converts an RGB image to detect green. Outputs a single channel (grayscale) image.
  */
@@ -72,13 +101,13 @@ void green_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
     GRAY_IMAGE img_and_buf(rows, cols);
 
     hls::Split(input, img_b_1, img_g_1, img_r_1);
-    hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
+    hls::Threshold(img_r_1, img_r_2, 40, 255, 0); // red image
     hls::Threshold(img_g_1, img_g_2, 60, 255, 0); // green image
-    hls::Threshold(img_r_1, img_r_2, 60, 255, 0); // red image
-    hls::Not(img_b_2, img_b_3); // not blue image
+    hls::Threshold(img_b_1, img_b_2, 80, 255, 0); // blue image
     hls::Not(img_r_2, img_r_3); // not red image
-    hls::And(img_g_2, img_b_3, img_and_buf);
-    hls::And(img_r_3, img_and_buf, output);
+    hls::Not(img_b_2, img_b_3); // not blue image
+    hls::And(img_g_2, img_r_3, img_and_buf);
+    hls::And(img_b_3, img_and_buf, output);
 
 }
 
@@ -99,9 +128,9 @@ void blue_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
     GRAY_IMAGE img_and_buf(rows, cols);
 
     hls::Split(input, img_b_1, img_g_1, img_r_1);
+    hls::Threshold(img_r_1, img_r_2, 30, 255, 0); // red image
+    hls::Threshold(img_g_1, img_g_2, 30, 255, 0); // green image
     hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
-    hls::Threshold(img_g_1, img_g_2, 60, 255, 0); // green image
-    hls::Threshold(img_r_1, img_r_2, 60, 255, 0); // red image
     hls::Not(img_r_2, img_r_3); // not red image
     hls::Not(img_g_2, img_g_3); // not green image
     hls::And(img_b_2, img_r_3, img_and_buf);
@@ -110,6 +139,21 @@ void blue_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
 }
 
 
+void generate_output_image(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
+
+  RGB_IMAGE img_rgb_buf1(rows, cols);
+  RGB_IMAGE img_rgb_buf2(rows, cols);
+
+  GRAY_IMAGE img_gs_buf1(rows, cols);
+
+  hls::AXIvideo2Mat(input, img_rgb_buf1);
+  green_filter(img_rgb_buf1, img_gs_buf1, rows, cols);
+
+  hls::CvtColor<HLS_GRAY2RGB>(img_gs_buf1, img_rgb_buf2);
+
+  hls::Mat2AXIvideo(img_rgb_buf2, output);
+
+}
 
 
 
@@ -164,38 +208,38 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
     hls::Duplicate(img_inbuf_1, img_inbuf_3, img_inbuf_4);
     hls::Duplicate(img_inbuf_4, img_inbuf_1, img_inbuf_2);
 
-    // Process blue image
-    hls::Split(img_inbuf_1, img_b_1, img_g_1, img_r_1);
-    hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
-    hls::Threshold(img_g_1, img_g_2, 60, 255, 0); // green image
+    // Process red image
+    hls::Split(img_inbuf_3, img_b_1, img_g_1, img_r_1);
     hls::Threshold(img_r_1, img_r_2, 60, 255, 0); // red image
+    hls::Threshold(img_g_1, img_g_2, 20, 255, 0); // green image
+    hls::Threshold(img_b_1, img_b_2, 40, 255, 0); // blue image
+    hls::Not(img_b_2, img_b_3); // not blue image
     hls::Not(img_g_2, img_g_3); // not green image
-    hls::Not(img_r_2, img_r_3); // not red image
-    hls::And(img_b_2, img_g_3, img_and_buf);
-    hls::And(img_r_3, img_and_buf, img_pure_blue_gray);
-    //hls::CvtColor<HLS_GRAY2RGB>(img_pure_blue_gray, img_pure_blue_rgb);
+    hls::And(img_r_2, img_b_3, img_and_buf);
+    hls::And(img_g_3, img_and_buf, img_pure_red_gray);
+    //hls::CvtColor<HLS_GRAY2RGB>(img_pure_red_gray, img_pure_red_rgb);
 
     // Process green image
     hls::Split(img_inbuf_2, img_b_1, img_g_1, img_r_1);
-    hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
+    hls::Threshold(img_r_1, img_r_2, 40, 255, 0); // red image
     hls::Threshold(img_g_1, img_g_2, 60, 255, 0); // green image
-    hls::Threshold(img_r_1, img_r_2, 60, 255, 0); // red image
+    hls::Threshold(img_b_1, img_b_2, 80, 255, 0); // blue image
     hls::Not(img_b_2, img_b_3); // not blue image
     hls::Not(img_r_2, img_r_3); // not red image
     hls::And(img_g_2, img_b_3, img_and_buf);
     hls::And(img_r_3, img_and_buf, img_pure_green_gray);
     //hls::CvtColor<HLS_GRAY2RGB>(img_pure_green_gray, img_pure_green_rgb);
 
-    // Process green image
-    hls::Split(img_inbuf_3, img_b_1, img_g_1, img_r_1);
+    // Process blue image
+    hls::Split(img_inbuf_1, img_b_1, img_g_1, img_r_1);
+    hls::Threshold(img_r_1, img_r_2, 30, 255, 0); // red image
+    hls::Threshold(img_g_1, img_g_2, 30, 255, 0); // green image
     hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
-    hls::Threshold(img_g_1, img_g_2, 60, 255, 0); // green image
-    hls::Threshold(img_r_1, img_r_2, 60, 255, 0); // red image
-    hls::Not(img_b_2, img_b_3); // not blue image
     hls::Not(img_g_2, img_g_3); // not green image
-    hls::And(img_r_2, img_b_3, img_and_buf);
-    hls::And(img_g_3, img_and_buf, img_pure_red_gray);
-    //hls::CvtColor<HLS_GRAY2RGB>(img_pure_red_gray, img_pure_red_rgb);
+    hls::Not(img_r_2, img_r_3); // not red image
+    hls::And(img_b_2, img_g_3, img_and_buf);
+    hls::And(img_r_3, img_and_buf, img_pure_blue_gray);
+    //hls::CvtColor<HLS_GRAY2RGB>(img_pure_blue_gray, img_pure_blue_rgb);
 
     hls::Merge(img_pure_blue_gray, img_pure_green_gray, img_pure_red_gray, img_1);
 
@@ -207,6 +251,7 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
     //hls::Threshold<>(img_2, img_3, 127, 255, 0);
     //hls::CvtColor<HLS_GRAY2RGB>(img_r_1, img_r_2);
 }
+
 
 /*
     hls::Sobel<1,0,3>(img_0, img_1); 

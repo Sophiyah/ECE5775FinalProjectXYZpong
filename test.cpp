@@ -46,6 +46,8 @@
 int main (int argc, char** argv) {
 
     IplImage* src = cvLoadImage(INPUT_IMAGE);
+std::cout<< "Size = " << cvGetSize(src).width << ", " << cvGetSize(src).height << std::endl;
+
     IplImage* dst1 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
     //IplImage* dst1 = cvCreateImage(cvGetSize(src), src->depth, 1);
     IplImage* dst2 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
@@ -54,7 +56,8 @@ int main (int argc, char** argv) {
     AXI_STREAM  src_axi, dst_axi;
     IplImage2AXIvideo(src, src_axi);
 
-    image_filter(src_axi, dst_axi, src->height, src->width);
+    generate_output_image(src_axi, dst_axi, src->height, src->width);
+    //image_filter(src_axi, dst_axi, src->height, src->width);
 
     AXIvideo2IplImage(dst_axi, dst1);
 
