@@ -130,7 +130,7 @@ void blue_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
     hls::Split(input, img_b_1, img_g_1, img_r_1);
     hls::Threshold(img_r_1, img_r_2, 30, 255, 0); // red image
     hls::Threshold(img_g_1, img_g_2, 30, 255, 0); // green image
-    hls::Threshold(img_b_1, img_b_2, 60, 255, 0); // blue image
+    hls::Threshold(img_b_1, img_b_2, 50, 255, 0); // blue image
     hls::Not(img_r_2, img_r_3); // not red image
     hls::Not(img_g_2, img_g_3); // not green image
     hls::And(img_b_2, img_r_3, img_and_buf);
@@ -139,19 +139,32 @@ void blue_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
 }
 
 
+/*
+ * Takes a grayscale image and computes XY coordinates of the center of the largest blob.
+ */
+void compute_coordinates() {
+
+}
+
+
+/*
+ * Reads the input AXI stream and outputs AXI stream. Useful for testing with test.cpp.
+ */
 void generate_output_image(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
 
   RGB_IMAGE img_rgb_buf1(rows, cols);
   RGB_IMAGE img_rgb_buf2(rows, cols);
+  RGB_IMAGE img_rgb_buf3(rows, cols);
 
   GRAY_IMAGE img_gs_buf1(rows, cols);
 
   hls::AXIvideo2Mat(input, img_rgb_buf1);
-  green_filter(img_rgb_buf1, img_gs_buf1, rows, cols);
+  hls::GaussianBlur<5, 5>(img_rgb_buf1, img_rgb_buf2, (double)1.0, (double)1.0);
+  red_filter(img_rgb_buf2, img_gs_buf1, rows, cols);
 
-  hls::CvtColor<HLS_GRAY2RGB>(img_gs_buf1, img_rgb_buf2);
+  hls::CvtColor<HLS_GRAY2RGB>(img_gs_buf1, img_rgb_buf3);
 
-  hls::Mat2AXIvideo(img_rgb_buf2, output);
+  hls::Mat2AXIvideo(img_rgb_buf3, output);
 
 }
 
