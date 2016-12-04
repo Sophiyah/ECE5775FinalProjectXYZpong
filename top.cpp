@@ -111,14 +111,6 @@ void blue_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
 
 
 
-
-
-
-
-
-
-
-
 void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
     //Create AXI streaming interfaces for the core
 #pragma HLS RESOURCE variable=input core=AXIS metadata="-bus_bundle INPUT_STREAM"
@@ -207,6 +199,56 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
     //hls::Threshold<>(img_2, img_3, 127, 255, 0);
     //hls::CvtColor<HLS_GRAY2RGB>(img_r_1, img_r_2);
 }
+
+
+
+
+
+/*
+ * Take the ball position and draw the ball. Take paddle position and draw paddle.
+ */
+ 
+ void drawGame(GAMEBG_BLANK& input, GAMEBG& output/*, int ballposition*/) {
+	 
+	HLS_SIZE_T imgRows = src.rows;
+	HLS_SIZE_T imgCols = src.cols; 
+	 
+	BW_PIXEL pixel_in;
+	BW_PIXEL pixel_out; 
+	
+	
+	 int ballRadiusSq = ballRadius^2; 
+	 //hls::Mat2AXIvideo(input, img_bg_1);
+	 
+	for (int currentRow = 0; currentRow < imgRows; currentRow++) {
+		for (int currentCol = 0; currentCol < imgCols; currentCol++) {
+			
+			src >> pixel_in; 
+			
+			pixel_out = pixel_in; //start by copying the background to output
+			
+			//alter the output pixedl if pixel is newar ball or paddle
+			distFromBall = abs(currentRow^2-currentCol^2);
+			if (distFromBall < = ballRadiusSq) {
+				pixel_out = 255; 
+			}
+			if ( (currentRow > (paddleX-paddleWidth)) && (currentRow < (paddleX+paddleWidth)) ) {
+				if ( (currentCol > (paddleY-paddleLength)) && (currentCol < (paddleY+paddleLength)) ) {
+					pixel_out = 255; 
+				}
+			}
+	
+		}
+	}
+		
+	 
+	 dist << pixel_out; 
+ }
+
+
+
+
+
 
 /*
     hls::Sobel<1,0,3>(img_0, img_1); 
