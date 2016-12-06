@@ -45,18 +45,20 @@
 
 int main (int argc, char** argv) {
 
-    IplImage* src = cvLoadImage(INPUT_IMAGE);
-    IplImage* dst1 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
-    //IplImage* dst1 = cvCreateImage(cvGetSize(src), src->depth, 1);
+    IplImage* src = cvLoadImage(INPUT_IMAGE, CV_LOAD_IMAGE_GRAYSCAL);
+    //IplImage* dst1 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
+    IplImage* dst1 = cvCreateImage(cvGetSize(src), src->depth, 1);
     IplImage* dst2 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
     //IplImage* dst2 = cvCreateImage(cvGetSize(src), src->depth, 1);
     
     AXI_STREAM  src_axi, dst_axi;
     IplImage2AXIvideo(src, src_axi);
 
-    image_filter(src_axi, dst_axi, src->height, src->width);
+    //image_filter(src_axi, dst_axi, src->height, src->width);
 
-    AXIvideo2IplImage(dst_axi, dst1);
+    //AXIvideo2IplImage(dst_axi, dst1);
+	drawGame(src,dst1/*, int ballposition*/); 
+	 
 
     cvSaveImage(OUTPUT_IMAGE, dst1);
     

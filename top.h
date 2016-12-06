@@ -65,4 +65,5 @@ typedef hls::Mat<MAX_HEIGHT, MAX_WIDTH, HLS_8UC1>     GRAY_IMAGE;
 // top level function for HW synthesis
 void image_filter(AXI_STREAM& src_axi, AXI_STREAM& dst_axi, int rows, int cols);
 
+void drawGame(GRAY_IMAGE& src, GRAY_IMAGE& dst/*, int ballposition*/);
 #endif

@@ -208,16 +208,28 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
  * Take the ball position and draw the ball. Take paddle position and draw paddle.
  */
  
- void drawGame(GAMEBG_BLANK& input, GAMEBG& output/*, int ballposition*/) {
+ void drawGame(RGB_IMAGE& src, GRAY_IMAGE& dst/*, int ballposition*/) {
 	 
+	 
+	GRAY_IMAGE img_r_1(rows, cols);
+    GRAY_IMAGE img_g_1(rows, cols);
+    GRAY_IMAGE img_b_1(rows, cols);
+	hls::Split(input, img_b_1, img_g_1, img_r_1);
 	HLS_SIZE_T imgRows = src.rows;
 	HLS_SIZE_T imgCols = src.cols; 
 	 
 	BW_PIXEL pixel_in;
 	BW_PIXEL pixel_out; 
 	
-	
-	 int ballRadiusSq = ballRadius^2; 
+	 uint8_t ballRadius = 10; 
+	 uint8_t paddleWidth = 3;
+	 uint8_t paddleLength = 10; 
+	 uint16_t ballX = 600; 
+	 uint16_t ballY = 600; 
+	 uint16_t paddleX = 10; 
+	 uint16_t paddleY = 600; 
+	 
+	 uint8_t ballRadiusSq = ballRadius^2; 
 	 //hls::Mat2AXIvideo(input, img_bg_1);
 	 
 	for (int currentRow = 0; currentRow < imgRows; currentRow++) {
@@ -228,8 +240,8 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
 			pixel_out = pixel_in; //start by copying the background to output
 			
 			//alter the output pixedl if pixel is newar ball or paddle
-			distFromBall = abs(currentRow^2-currentCol^2);
-			if (distFromBall < = ballRadiusSq) {
+			uint16_t distFromBall = (currentRow-ballX)^2-(currentCol-ballY)^2;
+			if (distFromBall <= ballRadiusSq) {
 				pixel_out = 255; 
 			}
 			if ( (currentRow > (paddleX-paddleWidth)) && (currentRow < (paddleX+paddleWidth)) ) {
@@ -242,7 +254,7 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
 	}
 		
 	 
-	 dist << pixel_out; 
+	 dst << pixel_out; 
  }
 
 
