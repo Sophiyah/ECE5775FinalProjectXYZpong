@@ -61,26 +61,29 @@
 /*
  * Converts an RGB image to detect red. Outputs a single channel (grayscale) image.
  */
-void red_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
+void red_filter (RGB_IMAGE& input, GRAY_IMAGE& output) {
 
-    GRAY_IMAGE img_r1(rows, cols);
-    GRAY_IMAGE img_g1(rows, cols);
-    GRAY_IMAGE img_b1(rows, cols);
-    GRAY_IMAGE img_r2(rows, cols);
-    GRAY_IMAGE img_g2(rows, cols);
-    GRAY_IMAGE img_b2(rows, cols);
-    GRAY_IMAGE img_g3(rows, cols);
-    GRAY_IMAGE img_b3(rows, cols);
-    GRAY_IMAGE img_and_buf(rows, cols);
+  HLS_SIZE_T rows = input.rows;
+  HLS_SIZE_T cols = input.cols;
 
-    hls::Split(input, img_b1, img_g1, img_r1);
-    hls::Threshold(img_r1, img_r2, 60, 255, 0); // red image
-    hls::Threshold(img_g1, img_g2, 20, 255, 0); // green image
-    hls::Threshold(img_b1, img_b2, 40, 255, 0); // blue image
-    hls::Not(img_g2, img_g3); // not green image
-    hls::Not(img_b2, img_b3); // not blue image
-    hls::And(img_r2, img_g3, img_and_buf);
-    hls::And(img_b3, img_and_buf, output);
+  GRAY_IMAGE img_r1(rows, cols);
+  GRAY_IMAGE img_g1(rows, cols);
+  GRAY_IMAGE img_b1(rows, cols);
+  GRAY_IMAGE img_r2(rows, cols);
+  GRAY_IMAGE img_g2(rows, cols);
+  GRAY_IMAGE img_b2(rows, cols);
+  GRAY_IMAGE img_g3(rows, cols);
+  GRAY_IMAGE img_b3(rows, cols);
+  GRAY_IMAGE img_and_buf(rows, cols);
+
+  hls::Split(input, img_b1, img_g1, img_r1);
+  hls::Threshold(img_r1, img_r2, 60, 255, 0); // red image
+  hls::Threshold(img_g1, img_g2, 20, 255, 0); // green image
+  hls::Threshold(img_b1, img_b2, 40, 255, 0); // blue image
+  hls::Not(img_g2, img_g3); // not green image
+  hls::Not(img_b2, img_b3); // not blue image
+  hls::And(img_r2, img_g3, img_and_buf);
+  hls::And(img_b3, img_and_buf, output);
 
 }
 
@@ -88,26 +91,29 @@ void red_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
 /*
  * Converts an RGB image to detect green. Outputs a single channel (grayscale) image.
  */
-void green_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
+void green_filter (RGB_IMAGE& input, GRAY_IMAGE& output) {
 
-    GRAY_IMAGE img_r1(rows, cols);
-    GRAY_IMAGE img_g1(rows, cols);
-    GRAY_IMAGE img_b1(rows, cols);
-    GRAY_IMAGE img_r2(rows, cols);
-    GRAY_IMAGE img_g2(rows, cols);
-    GRAY_IMAGE img_b2(rows, cols);
-    GRAY_IMAGE img_r3(rows, cols);
-    GRAY_IMAGE img_b3(rows, cols);
-    GRAY_IMAGE img_and_buf(rows, cols);
+  HLS_SIZE_T rows = input.rows;
+  HLS_SIZE_T cols = input.cols;
 
-    hls::Split(input, img_b1, img_g1, img_r1);
-    hls::Threshold(img_r1, img_r2, 40, 255, 0); // red image
-    hls::Threshold(img_g1, img_g2, 60, 255, 0); // green image
-    hls::Threshold(img_b1, img_b2, 80, 255, 0); // blue image
-    hls::Not(img_r2, img_r3); // not red image
-    hls::Not(img_b2, img_b3); // not blue image
-    hls::And(img_g2, img_r3, img_and_buf);
-    hls::And(img_b3, img_and_buf, output);
+  GRAY_IMAGE img_r1(rows, cols);
+  GRAY_IMAGE img_g1(rows, cols);
+  GRAY_IMAGE img_b1(rows, cols);
+  GRAY_IMAGE img_r2(rows, cols);
+  GRAY_IMAGE img_g2(rows, cols);
+  GRAY_IMAGE img_b2(rows, cols);
+  GRAY_IMAGE img_r3(rows, cols);
+  GRAY_IMAGE img_b3(rows, cols);
+  GRAY_IMAGE img_and_buf(rows, cols);
+
+  hls::Split(input, img_b1, img_g1, img_r1);
+  hls::Threshold(img_r1, img_r2, 40, 255, 0); // red image
+  hls::Threshold(img_g1, img_g2, 60, 255, 0); // green image
+  hls::Threshold(img_b1, img_b2, 80, 255, 0); // blue image
+  hls::Not(img_r2, img_r3); // not red image
+  hls::Not(img_b2, img_b3); // not blue image
+  hls::And(img_g2, img_r3, img_and_buf);
+  hls::And(img_b3, img_and_buf, output);
 
 }
 
@@ -115,26 +121,29 @@ void green_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
 /*
  * Converts an RGB image to detect blue. Outputs a single channel (grayscale) image.
  */
-void blue_filter (RGB_IMAGE& input, GRAY_IMAGE& output, int rows, int cols) {
+void blue_filter (RGB_IMAGE& input, GRAY_IMAGE& output) {
 
-    GRAY_IMAGE img_r1(rows, cols);
-    GRAY_IMAGE img_g1(rows, cols);
-    GRAY_IMAGE img_b1(rows, cols);
-    GRAY_IMAGE img_r2(rows, cols);
-    GRAY_IMAGE img_g2(rows, cols);
-    GRAY_IMAGE img_b2(rows, cols);
-    GRAY_IMAGE img_r3(rows, cols);
-    GRAY_IMAGE img_g3(rows, cols);
-    GRAY_IMAGE img_and_buf(rows, cols);
+  HLS_SIZE_T rows = input.rows;
+  HLS_SIZE_T cols = input.cols;
 
-    hls::Split(input, img_b1, img_g1, img_r1);
-    hls::Threshold(img_r1, img_r2, 30, 255, 0); // red image
-    hls::Threshold(img_g1, img_g2, 30, 255, 0); // green image
-    hls::Threshold(img_b1, img_b2, 50, 255, 0); // blue image
-    hls::Not(img_r2, img_r3); // not red image
-    hls::Not(img_g2, img_g3); // not green image
-    hls::And(img_b2, img_r3, img_and_buf);
-    hls::And(img_g3, img_and_buf, output);
+  GRAY_IMAGE img_r1(rows, cols);
+  GRAY_IMAGE img_g1(rows, cols);
+  GRAY_IMAGE img_b1(rows, cols);
+  GRAY_IMAGE img_r2(rows, cols);
+  GRAY_IMAGE img_g2(rows, cols);
+  GRAY_IMAGE img_b2(rows, cols);
+  GRAY_IMAGE img_r3(rows, cols);
+  GRAY_IMAGE img_g3(rows, cols);
+  GRAY_IMAGE img_and_buf(rows, cols);
+
+  hls::Split(input, img_b1, img_g1, img_r1);
+  hls::Threshold(img_r1, img_r2, 30, 255, 0); // red image
+  hls::Threshold(img_g1, img_g2, 30, 255, 0); // green image
+  hls::Threshold(img_b1, img_b2, 50, 255, 0); // blue image
+  hls::Not(img_r2, img_r3); // not red image
+  hls::Not(img_g2, img_g3); // not green image
+  hls::And(img_b2, img_r3, img_and_buf);
+  hls::And(img_g3, img_and_buf, output);
 
 }
 
@@ -260,9 +269,10 @@ void median_filter(RGB_IMAGE& src, RGB_IMAGE& dst)
 
 
 /*
- * Takes a grayscale image and computes XY coordinates of the center of the largest blob.
+ * Takes a grayscale image and computes XY coordinates of the center of the left blob.
  */
-void compute_coordinates(GRAY_IMAGE& input, GRAY_IMAGE& output) {
+ap_uint<12> compute_center_left(GRAY_IMAGE& input) {
+//void compute_center_left(GRAY_IMAGE& input, GRAY_IMAGE& output) {
 
   GRAY_PIXEL pixel_in;
   GRAY_PIXEL pixel_out;
@@ -272,10 +282,7 @@ void compute_coordinates(GRAY_IMAGE& input, GRAY_IMAGE& output) {
 
   ap_uint<12> min_row = 4095;
   ap_uint<12> max_row = 0;
-  ap_uint<12> min_col = 4095;
-  ap_uint<12> max_col = 0;
-  ap_uint<12> row_center;
-  ap_uint<12> col_center;
+  ap_uint<12> center;
 
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
@@ -283,26 +290,137 @@ void compute_coordinates(GRAY_IMAGE& input, GRAY_IMAGE& output) {
 #pragma HLS PIPELINE
       input >> pixel_in;
       pixel_out.val[0] = pixel_in.val[0];
-      output << pixel_out;
+      //output << pixel_out;
 
-      if (pixel_in.val[0] == 255) { // process the white pixels
+      if (pixel_in.val[0] == 255 && j > 50 && j < 250) {
         if (i < min_row)
           min_row = i;
         if (i > max_row)
           max_row = i;
-        if (j < min_col)
-          min_col = j;
-        if (j > max_col)
-          max_col = j;
       }
 
-    } // end of inner for loop
-  } // end of outer for loop
+    } // end inner for loop
+  } // end outer for loop
 
-  row_center = (min_row + max_row)/2;
-  col_center = (min_col + max_col)/2;
+  center = (min_row + max_row)/2; // row is the Y-coordinate
+//std::cout << "Row center = " << row_center << ", col center = " << col_center << std::endl;
+  return center;
+} // end function
 
-} // end of function
+
+/*
+ * Takes a grayscale image and computes XY coordinates of the center of the right blob.
+ */
+ap_uint<12> compute_center_right(GRAY_IMAGE& input) {
+//void compute_center_right(GRAY_IMAGE& input, GRAY_IMAGE& output) {
+
+  GRAY_PIXEL pixel_in;
+  GRAY_PIXEL pixel_out;
+
+  HLS_SIZE_T rows = input.rows;
+  HLS_SIZE_T cols = input.cols;
+
+  ap_uint<12> min_row = 4095;
+  ap_uint<12> max_row = 0;
+  ap_uint<12> center;
+
+  for (HLS_SIZE_T i=0; i<rows; i++) {
+    for (HLS_SIZE_T j=0; j<cols; j++) {
+#pragma HLS LOOP_FLATTEN_OFF
+#pragma HLS PIPELINE
+      input >> pixel_in;
+      pixel_out.val[0] = pixel_in.val[0];
+      //output << pixel_out;
+
+      //if (pixel_in.val[0] == 255 && j > 830 && j < 1030) {
+      if (pixel_in.val[0] == 255 && j > 630 && j < 1030) {
+        if (i < min_row)
+          min_row = i;
+        if (i > max_row)
+          max_row = i;
+      }
+
+    } // end inner for loop
+  } // end outer for loop
+
+  center = (min_row + max_row)/2; // row is the Y-coordinate
+//std::cout << "Row center = " << row_center << ", col center = " << col_center << std::endl;
+  return center;
+} // end function
+
+
+/*
+ * This is the main draw function.
+ */
+void draw_output(ap_uint<12> left_center, ap_uint<12> right_center, GRAY_IMAGE& output) {
+//void draw_output(RGB_IMAGE& input, GRAY_IMAGE& output) {
+
+  //RGB_PIXEL pixel_in;
+  GRAY_PIXEL pixel_out;
+
+  //HLS_SIZE_T rows = input.rows;
+  //HLS_SIZE_T cols = input.cols;
+
+  HLS_SIZE_T rows = 720;
+  HLS_SIZE_T cols = 1080;
+
+  ap_uint<12> HALF_PADDLE_WIDTH = 5;
+  ap_uint<12> HALF_PADDLE_HEIGHT = 25;
+
+  // if centers are at the bounds, assign new values to prevent overflow
+  if (left_center < HALF_PADDLE_HEIGHT)
+    left_center = HALF_PADDLE_HEIGHT;
+  if (left_center > rows - HALF_PADDLE_HEIGHT)
+    left_center = rows - HALF_PADDLE_HEIGHT;
+  if (right_center < HALF_PADDLE_HEIGHT)
+    right_center = HALF_PADDLE_HEIGHT;
+  if (right_center > rows - HALF_PADDLE_HEIGHT)
+    right_center = rows - HALF_PADDLE_HEIGHT;
+
+  ap_uint<12> left_top_bound = left_center - HALF_PADDLE_HEIGHT;
+  ap_uint<12> left_bot_bound = left_center + HALF_PADDLE_HEIGHT;
+  ap_uint<12> right_top_bound = right_center - HALF_PADDLE_HEIGHT;
+  ap_uint<12> right_bot_bound = right_center + HALF_PADDLE_HEIGHT;
+
+  // hardcoded x-axis values: paddle length is 10, paddle width is 50
+  ap_uint<12> left_lft_bound = 50 - HALF_PADDLE_WIDTH;
+  ap_uint<12> left_rgt_bound = 50 + HALF_PADDLE_WIDTH;
+  ap_uint<12> right_lft_bound = 1030 - HALF_PADDLE_WIDTH;
+  ap_uint<12> right_rgt_bound = 1030 + HALF_PADDLE_WIDTH;
+
+  for (HLS_SIZE_T i=0; i<rows; i++) {
+    for (HLS_SIZE_T j=0; j<cols; j++) {
+#pragma HLS LOOP_FLATTEN_OFF
+#pragma HLS PIPELINE
+
+      //input >> pixel_in;
+      //pixel_out.val[0] = pixel_in.val[0];
+
+      // draw left paddle
+      if (i > left_top_bound &&
+          i < left_bot_bound &&
+          j > left_lft_bound &&
+          j < left_rgt_bound) {
+        pixel_out.val[0] = 255;
+      }
+
+      // draw right paddle
+      else if (i > right_top_bound &&
+               i < right_bot_bound &&
+               j > right_lft_bound &&
+               j < right_rgt_bound) {
+        pixel_out.val[0] = 255;
+      }
+
+      else
+        pixel_out.val[0] = 0;
+
+    output << pixel_out;
+
+    } // end inner for loop
+  } // end outer for loop
+
+} // end function
 
 
 /*
@@ -320,22 +438,43 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   #pragma HLS INTERFACE ap_stable port=rows
   #pragma HLS INTERFACE ap_stable port=cols
 
-
-  RGB_IMAGE  rgb_buf1(rows, cols);
-  RGB_IMAGE  rgb_buf2(rows, cols);
-  GRAY_IMAGE gs_buf3(rows, cols);
+  RGB_IMAGE rgb_buf1(rows, cols);
+  RGB_IMAGE rgb_buf2(rows, cols);
+  RGB_IMAGE rgb_buf3(rows, cols);
   GRAY_IMAGE gs_buf4(rows, cols);
-  RGB_IMAGE  rgb_buf5(rows, cols);
+  //GRAY_IMAGE gs_buf5(rows, cols);
+  RGB_IMAGE rgb_buf6(rows, cols);
+  GRAY_IMAGE gs_buf7(rows, cols);
+  //GRAY_IMAGE gs_buf8(rows, cols);
+
+  ap_uint<12> left_center;
+  ap_uint<12> right_center;
+
+  //TODO DELETE
+  GRAY_IMAGE output_buf1(rows, cols);
+  RGB_IMAGE output_buf2(rows, cols);
+  //RGB_IMAGE temp_buf2(rows, cols);
 
   hls::AXIvideo2Mat(input, rgb_buf1);
 
   hls::GaussianBlur<5, 5>(rgb_buf1, rgb_buf2, (double)1.0, (double)1.0);
   //median_filter(rgb_buf1, rgb_buf2);
-  red_filter(rgb_buf2, gs_buf3, rows, cols);
-  compute_coordinates(gs_buf3, gs_buf4);
-  hls::CvtColor<HLS_GRAY2RGB>(gs_buf4, rgb_buf5);
+  hls::Duplicate(rgb_buf2, rgb_buf3, rgb_buf6);
+  red_filter(rgb_buf3, gs_buf4);
+  green_filter(rgb_buf6, gs_buf7);
+  left_center = compute_center_left(gs_buf4);
+  right_center = compute_center_right(gs_buf7);
 
-  hls::Mat2AXIvideo(rgb_buf5, output);
+  //compute_center_left(gs_buf4, gs_buf5);
+  //compute_center_right(gs_buf7, gs_buf8);
+
+  //TODO DELETE
+  //hls::CvtColor<HLS_GRAY2RGB>(gs_buf4, rgb_buf5);
+
+  draw_output(left_center, right_center, output_buf1);
+  hls::CvtColor<HLS_GRAY2RGB>(empty, output_buf2);
+
+  hls::Mat2AXIvideo(out_buf2, output);
 
 
 
