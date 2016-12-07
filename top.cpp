@@ -53,10 +53,7 @@
 
 ***************************************************************************/
 
-
 #include "top.h"
-
-
 
 /*
  * Converts an RGB image to detect red. Outputs a single channel (grayscale) image.
@@ -196,10 +193,21 @@ TUPLE compute_center(GRAY_IMAGE& input) {
     } // end inner for loop
   } // end outer for loop
 
-  centers.first = (left_min_row + left_max_row)/2; // row is the Y-coordinate
-  centers.second = (right_min_row + right_max_row)/2; // row is the Y-coordinate
+  centers.first = (left_min_row + left_max_row) >> 1;
+  centers.second = (right_min_row + right_max_row) >> 1;
   return centers;
 } // end function
+
+
+/*
+ * This function handles the ball movement, including paddle collisions and 
+ * out of bounds (game over) conditions.
+ */
+void compute_ball(GRAY_IMAGE& output, int rows, int cols) {
+
+  ap_uint<4> BALL_SIZE = 10; // size of the square representing the ball
+
+}
 
 
 /*
@@ -208,8 +216,8 @@ TUPLE compute_center(GRAY_IMAGE& input) {
 void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
   GRAY_PIXEL pixel_out;
 
-  ap_uint<10> HALF_PADDLE_WIDTH = 5;
-  ap_uint<10> HALF_PADDLE_HEIGHT = 25;
+  ap_uint<8> HALF_PADDLE_WIDTH = 5;
+  ap_uint<8> HALF_PADDLE_HEIGHT = 25;
 
   // if centers are at the bounds, assign new values to prevent overflow
   if (centers.first < HALF_PADDLE_HEIGHT)
@@ -221,16 +229,17 @@ void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
   if (centers.second > rows - HALF_PADDLE_HEIGHT)
     centers.second = rows - HALF_PADDLE_HEIGHT;
 
+  // compute paddle dimensions based on the centers
   ap_uint<10> left_top_bound = centers.first - HALF_PADDLE_HEIGHT;
   ap_uint<10> left_bot_bound = centers.first + HALF_PADDLE_HEIGHT;
   ap_uint<10> right_top_bound = centers.second - HALF_PADDLE_HEIGHT;
   ap_uint<10> right_bot_bound = centers.second + HALF_PADDLE_HEIGHT;
 
-  // hardcoded x-axis values: paddle length is 10, paddle width is 50
-  ap_uint<12> left_lft_bound = 50 - HALF_PADDLE_WIDTH;
-  ap_uint<12> left_rgt_bound = 50 + HALF_PADDLE_WIDTH;
-  ap_uint<12> right_lft_bound = 1030 - HALF_PADDLE_WIDTH;
-  ap_uint<12> right_rgt_bound = 1030 + HALF_PADDLE_WIDTH;
+  // hardcoded X-axis bounds, the paddle only moves vertically
+  ap_uint<11> left_lft_bound = 50 - HALF_PADDLE_WIDTH;
+  ap_uint<11> left_rgt_bound = 50 + HALF_PADDLE_WIDTH;
+  ap_uint<11> right_lft_bound = 1030 - HALF_PADDLE_WIDTH;
+  ap_uint<11> right_rgt_bound = 1030 + HALF_PADDLE_WIDTH;
 
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
@@ -253,6 +262,7 @@ void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
         pixel_out.val[0] = 255;
       }
 
+      // if no game element, draw black pixel
       else
         pixel_out.val[0] = 0;
 
@@ -288,9 +298,8 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   GRAY_IMAGE gs_buf8(rows, cols);
   GRAY_IMAGE gs_buf9(rows, cols);
   GRAY_IMAGE gs_buf10(rows, cols);
-
-  GRAY_IMAGE out_buf1(rows, cols);
-  RGB_IMAGE out_buf2(rows, cols);
+  GRAY_IMAGE gs_buf11(rows, cols);
+  RGB_IMAGE rgb_buf12(rows, cols);
 
   TUPLE centers;
 
@@ -305,9 +314,9 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   hls::Not(gs_buf9, gs_buf10);
   centers = compute_center(gs_buf10);
 
-  draw_output(centers, out_buf1, rows, cols);
-  hls::CvtColor<HLS_GRAY2RGB>(out_buf1, out_buf2);
-  hls::Mat2AXIvideo(out_buf2, output);
+  draw_output(centers, gs_buf11, rows, cols);
+  hls::CvtColor<HLS_GRAY2RGB>(gs_buf11, rgb_buf12);
+  hls::Mat2AXIvideo(rgb_buf12, output);
 
 }
 
