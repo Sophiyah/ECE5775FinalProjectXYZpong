@@ -54,6 +54,7 @@
 ***************************************************************************/
 
 #include "top.h"
+#include <stdlib.h>
 
 /*
  * Converts an RGB image to detect red. Outputs a single channel (grayscale) image.
@@ -204,9 +205,72 @@ TUPLE compute_center(GRAY_IMAGE& input) {
  * out of bounds (game over) conditions.
  */
 void compute_ball(GRAY_IMAGE& output, int rows, int cols) {
+  ap_uint<11> ball_x = 320;
+  ap_uint<11> ball_y = 240;
 
-  ap_uint<4> BALL_SIZE = 10; // size of the square representing the ball
+  ap_uint<11> ball_tempX = 320;
+  ap_uint<11> ball_tempY = 240;
 
+int p1_x = 20;
+int p1_y = 210;
+
+int p1_tempX = 20;
+int p1_tempY = 210;
+
+int p2_x = 620;
+int p2_y = 210;
+
+int p2_tempX = 620;
+int p2_tempY = 210;
+int n = 0;
+    
+    
+    ball_tempX = ball_x;
+    ball_tempY = ball_y;
+
+    if (dir == 1 && ball_x > 5 && ball_y > 5){
+     
+         if( ball_x == p1_x + 15 && ball_y >= p1_y && ball_y <= p1_y + 60){
+                  dir = rand()% 2 + 3;
+         }else{    
+                 --ball_x;
+                 --ball_y;
+         }    
+              
+    } else if (dir == 2 && ball_x > 5 && ball_y < 475){
+
+         if( ball_x == p1_x + 15 && ball_y >= p1_y && ball_y <= p1_y + 60){
+                  dir = rand()% 2 + 3;
+         }else{    
+                 --ball_x;
+                 ++ball_y;
+         }
+
+    } else if (dir == 3 && ball_x < 635 && ball_y > 5){
+
+         if( ball_x + 5 == p2_x && ball_y >= p2_y && ball_y <= p2_y + 60){
+                  dir = rand()% 2 + 1;
+         }else{    
+                 ++ball_x;
+                 --ball_y;
+         }
+
+    } else if (dir == 4 && ball_x < 635 && ball_y < 475){
+
+         if( ball_x + 5 == p2_x && ball_y >= p2_y && ball_y <= p2_y + 60){
+                  dir = rand()% 2 + 1;
+         }else{    
+                 ++ball_x;
+                 ++ball_y;
+         }
+
+    } else { 
+
+        if (dir == 1 || dir == 3)    ++dir;
+        else if (dir == 2 || dir == 4)    --dir;
+
+    } 
+  
 }
 
 
@@ -218,6 +282,9 @@ void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
 
   ap_uint<8> HALF_PADDLE_WIDTH = 5;
   ap_uint<8> HALF_PADDLE_HEIGHT = 25;
+  ap_uint<8> BALL_RADIUS = 200; 
+  ap_uint<16> ballX = 200; 
+  ap_uint<16> ballY = 600; 
 
   // if centers are at the bounds, assign new values to prevent overflow
   if (centers.first < HALF_PADDLE_HEIGHT)
@@ -241,11 +308,19 @@ void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
   ap_uint<11> right_lft_bound = 1030 - HALF_PADDLE_WIDTH;
   ap_uint<11> right_rgt_bound = 1030 + HALF_PADDLE_WIDTH;
 
+  // compute ball boundary 
+  ap_uint<16> ballRadiusSq = BALL_RADIUS* BALL_RADIUS;
+  
+  //if ball center is at bounds, 
+  
+  
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
 #pragma HLS LOOP_FLATTEN_OFF
 #pragma HLS PIPELINE
-
+	  //compute distance current pixel is from ball
+	  ap_uint<64> distFromBall = ((i- ballX)*(i-ballX)) + (j - ballY)*(j-ballY);
+      
       // draw left paddle
       if (i > left_top_bound &&
           i < left_bot_bound &&
@@ -261,11 +336,16 @@ void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
                j < right_rgt_bound) {
         pixel_out.val[0] = 255;
       }
+	  
+	  // draw ball
+	  else if (distFromBall < ballRadiusSq) {
+		  pixel_out.val[0] = 255;
+	  }
 
       // if no game element, draw black pixel
-      else
+      else{
         pixel_out.val[0] = 0;
-
+	  }
     output << pixel_out;
 
     } // end inner for loop
