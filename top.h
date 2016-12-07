@@ -62,6 +62,7 @@ typedef hls::Scalar<3, unsigned char>                 RGB_PIXEL;
 typedef hls::Scalar<1, unsigned char>                 GRAY_PIXEL;
 typedef hls::Mat<MAX_HEIGHT, MAX_WIDTH, HLS_8UC3>     RGB_IMAGE;
 typedef hls::Mat<MAX_HEIGHT, MAX_WIDTH, HLS_8UC1>     GRAY_IMAGE;
+typedef std::pair<ap_uint<10>, ap_uint<10> >          TUPLE;
 
 // top level function for HW synthesis
 void image_filter(AXI_STREAM& src_axi, AXI_STREAM& dst_axi, int rows, int cols);

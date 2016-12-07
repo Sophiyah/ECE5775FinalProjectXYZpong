@@ -56,8 +56,7 @@ std::cout<< "Size = " << cvGetSize(src).width << ", " << cvGetSize(src).height <
     AXI_STREAM  src_axi, dst_axi;
     IplImage2AXIvideo(src, src_axi);
 
-    generate_output_image(src_axi, dst_axi, src->height, src->width);
-    //image_filter(src_axi, dst_axi, src->height, src->width);
+    image_filter(src_axi, dst_axi, src->height, src->width);
 
     AXIvideo2IplImage(dst_axi, dst1);
 
