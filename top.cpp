@@ -163,12 +163,12 @@ TUPLE compute_center(GRAY_IMAGE& input) {
   HLS_SIZE_T rows = input.rows;
   HLS_SIZE_T cols = input.cols;
 
-  ap_uint<10> left_min_row = 1023;
-  ap_uint<10> left_max_row = 0;
-  ap_uint<10> left_center;
-  ap_uint<10> right_min_row = 1023;
-  ap_uint<10> right_max_row = 0;
-  ap_uint<10> right_center;
+  ap_uint<11> left_min_row = cols;
+  ap_uint<11> left_max_row = 0;
+  ap_uint<11> left_center;
+  ap_uint<11> right_min_row = cols;
+  ap_uint<11> right_max_row = 0;
+  ap_uint<11> right_center;
 
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
@@ -184,7 +184,7 @@ TUPLE compute_center(GRAY_IMAGE& input) {
       }
 
       // detect blue on the right side
-      else if (pixel_in.val[0] == 2 && j > 830 && j < 1030) {
+      else if (pixel_in.val[0] == 2 && j > (cols-250) && j < (cols-50)) {
         if (i < right_min_row)
           right_min_row = i;
         if (i > right_max_row)
@@ -230,16 +230,16 @@ void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
     centers.second = rows - HALF_PADDLE_HEIGHT;
 
   // compute paddle dimensions based on the centers
-  ap_uint<10> left_top_bound = centers.first - HALF_PADDLE_HEIGHT;
-  ap_uint<10> left_bot_bound = centers.first + HALF_PADDLE_HEIGHT;
-  ap_uint<10> right_top_bound = centers.second - HALF_PADDLE_HEIGHT;
-  ap_uint<10> right_bot_bound = centers.second + HALF_PADDLE_HEIGHT;
+  ap_uint<11> left_top_bound = centers.first - HALF_PADDLE_HEIGHT;
+  ap_uint<11> left_bot_bound = centers.first + HALF_PADDLE_HEIGHT;
+  ap_uint<11> right_top_bound = centers.second - HALF_PADDLE_HEIGHT;
+  ap_uint<11> right_bot_bound = centers.second + HALF_PADDLE_HEIGHT;
 
   // hardcoded X-axis bounds, the paddle only moves vertically
   ap_uint<11> left_lft_bound = 50 - HALF_PADDLE_WIDTH;
   ap_uint<11> left_rgt_bound = 50 + HALF_PADDLE_WIDTH;
-  ap_uint<11> right_lft_bound = 1030 - HALF_PADDLE_WIDTH;
-  ap_uint<11> right_rgt_bound = 1030 + HALF_PADDLE_WIDTH;
+  ap_uint<11> right_lft_bound = cols - 50 - HALF_PADDLE_WIDTH;
+  ap_uint<11> right_rgt_bound = cols - 50 + HALF_PADDLE_WIDTH;
 
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
