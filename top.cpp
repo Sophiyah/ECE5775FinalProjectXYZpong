@@ -101,9 +101,10 @@ void color_filter(RGB_IMAGE& input, GRAY_IMAGE& output) {
 /*
  * Takes a grayscale image and computes XY coordinates of the center of both blobs.
  */
-TUPLE compute_center(GRAY_IMAGE& input) {
+void compute_center(GRAY_IMAGE& input, GRAY_IMAGE& output, hls::stream< ap_uint<11> >&paddle_centers) {
 
   GRAY_PIXEL pixel_in;
+  GRAY_PIXEL pixel_out;
   TUPLE centers;
 
   HLS_SIZE_T rows = input.rows;
@@ -111,15 +112,23 @@ TUPLE compute_center(GRAY_IMAGE& input) {
 
   ap_uint<11> left_min_row = cols;
   ap_uint<11> left_max_row = 0;
-  ap_uint<11> left_center;
   ap_uint<11> right_min_row = cols;
   ap_uint<11> right_max_row = 0;
-  ap_uint<11> right_center;
+
+  static TUPLE prevCenters;
+  TUPLE temp;
+
 
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
 #pragma HLS LOOP_FLATTEN_OFF
 #pragma HLS PIPELINE
+
+      temp.first = prevCenters.first;
+      temp.second = prevCenters.second;
+      paddle_centers.write(temp.first);
+      paddle_centers.write(temp.second);
+
       input >> pixel_in;
       // detect green on the left side
       if (pixel_in.val[0] == 127 && j > 50 && j < 250) {
@@ -136,13 +145,24 @@ TUPLE compute_center(GRAY_IMAGE& input) {
           right_min_row = i;
         if (i > right_max_row)
           right_max_row = i;
+
       }
+
+      pixel_out.val[0] = pixel_in.val[0];
+      //pixel_out.val[0] = 0;
+      output << pixel_out;
+
     } // end inner for loop
   } // end outer for loop
 
   centers.first = (left_min_row + left_max_row) >> 1;
   centers.second = (right_min_row + right_max_row) >> 1;
-  return centers;
+
+  TUPLE temp0;
+  temp0.first = centers.first;
+  temp0.second = centers.second;
+  prevCenters = temp0;
+
 } // end function
 
 /*
@@ -225,17 +245,22 @@ TUPLE compute_ball(int rows, int cols, TUPLE pCenters, TUPLE prevBallCenter) {
 /*
  * This is the main draw function.
  */
-void draw_output(TUPLE centers, TUPLE ballCenter, GRAY_IMAGE& output, int rows, int cols) {
-  GRAY_PIXEL pixel_out;
+void draw_output(GRAY_IMAGE& input, hls::stream< ap_uint<11> >&paddle_centers, GRAY_IMAGE& output, int rows, int cols) {
   
+  GRAY_PIXEL pixel_in;
+  GRAY_PIXEL pixel_out;
+  TUPLE ballCenter;
+
   //ap_uint<8> PADDLE_X_OFFSET = 50; TODELETE<moved to header file
   //~ ap_uint<8> HALF_PADDLE_WIDTH = 5;
   //~ ap_uint<8> HALF_PADDLE_HEIGHT = 25;
   //~ ap_uint<8> BALL_RADIUS = 20; 
   //~ TUPLE ballCenter;
-  //~ ballCenter.first = 200;
-  //~ ballCenter.second = 600; 
 
+  ballCenter.first = 200;
+  ballCenter.second = 600;
+
+/*
   // if centers are at the bounds, assign new values to prevent overflow
   if (centers.first < HALF_PADDLE_HEIGHT)
     centers.first = HALF_PADDLE_HEIGHT;
@@ -252,6 +277,7 @@ void draw_output(TUPLE centers, TUPLE ballCenter, GRAY_IMAGE& output, int rows, 
   ap_uint<11> left_bot_bound = centers.first + HALF_PADDLE_HEIGHT;
   ap_uint<11> right_top_bound = centers.second - HALF_PADDLE_HEIGHT;
   ap_uint<11> right_bot_bound = centers.second + HALF_PADDLE_HEIGHT;
+*/
 
   // hardcoded X-axis bounds, the paddle only moves vertically
   ap_uint<11> left_lft_bound = PADDLE_X_OFFSET - HALF_PADDLE_WIDTH;
@@ -272,42 +298,64 @@ void draw_output(TUPLE centers, TUPLE ballCenter, GRAY_IMAGE& output, int rows, 
 #pragma HLS LOOP_FLATTEN_OFF
 #pragma HLS PIPELINE
 
-	  //compute distance current pixel is from ball
-	  //ap_uint<64> distFromBall = ((i- ballX)*(i-ballX)) + (j - ballY)*(j-ballY);
+      input >> pixel_in;
+
+      TUPLE centers;
+      centers.first = paddle_centers.read();
+      centers.second = paddle_centers.read();
+
+       // if centers are at the bounds, assign new values to prevent overflow
+       if (centers.first < HALF_PADDLE_HEIGHT)
+         centers.first = HALF_PADDLE_HEIGHT;
+       if (centers.first > rows - HALF_PADDLE_HEIGHT) 
+         centers.first = rows - HALF_PADDLE_HEIGHT;
+       if (centers.second < HALF_PADDLE_HEIGHT)
+         centers.second = HALF_PADDLE_HEIGHT;
+       if (centers.second > rows - HALF_PADDLE_HEIGHT)
+         centers.second = rows - HALF_PADDLE_HEIGHT;
+  
+
+       // compute paddle dimensions based on the centers
+       ap_uint<11> left_top_bound = centers.first - HALF_PADDLE_HEIGHT;
+       ap_uint<11> left_bot_bound = centers.first + HALF_PADDLE_HEIGHT;
+       ap_uint<11> right_top_bound = centers.second - HALF_PADDLE_HEIGHT;
+       ap_uint<11> right_bot_bound = centers.second + HALF_PADDLE_HEIGHT;
+
+
+	     //compute distance current pixel is from ball
+	     //ap_uint<64> distFromBall = ((i- ballX)*(i-ballX)) + (j - ballY)*(j-ballY);
       
-      // draw left paddle
-      if (i > left_top_bound &&
-          i < left_bot_bound &&
-          j > left_lft_bound &&
-          j < left_rgt_bound)
-        pixel_out.val[0] = 255;
+       // draw left paddle
+       if (i > left_top_bound &&
+           i < left_bot_bound &&
+           j > left_lft_bound &&
+           j < left_rgt_bound)
+         pixel_out.val[0] = 255;
 
 
-      // draw right paddle
-      else if (i > right_top_bound &&
-               i < right_bot_bound &&
-               j > right_lft_bound &&
-               j < right_rgt_bound)
-        pixel_out.val[0] = 255;
+       // draw right paddle
+       else if (i > right_top_bound &&
+                i < right_bot_bound &&
+                j > right_lft_bound &&
+                j < right_rgt_bound)
+         pixel_out.val[0] = 255;
 
-	
-
-	  // draw ball
-	  else if (i > ball_top_bound &&
-             i < ball_bot_bound &&
-             j > ball_left_bound &&
-             j < ball_right_bound ) {
-		  pixel_out.val[0] = 255;
+	     // draw ball
+	     else if (i > ball_top_bound &&
+                i < ball_bot_bound &&
+                j > ball_left_bound &&
+                j < ball_right_bound ) {
+		     pixel_out.val[0] = 255;
 	  }
 
-      // if no game element, draw black pixel
-      else
-        pixel_out.val[0] = 0;
+       // if no game element, draw black pixel
+       else
+         pixel_out.val[0] = 0;
 
-    output << pixel_out;
+     output << pixel_out;
 
-    } // end inner for loop
-  } // end outer for loop
+     } // end inner for loop
+   } // end outer for loop
 } // end function
 
 
@@ -331,23 +379,26 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   RGB_IMAGE rgb_buf2(rows, cols);
   GRAY_IMAGE gs_buf3(rows, cols);
   GRAY_IMAGE gs_buf4(rows, cols);
-  RGB_IMAGE rgb_buf5(rows, cols);
+  GRAY_IMAGE gs_buf5(rows, cols);
+  RGB_IMAGE rgb_buf6(rows, cols);
 
-  TUPLE centers;
-  TUPLE ballCenter;
-  ballCenter.first = 600;
-  ballCenter.second = 1000; 
+  //TUPLE centers;
+  //TUPLE ballCenter;
+
+  hls::stream< ap_uint<11> > paddle_centers;
+  //ballCenter.first = 600;
+  //ballCenter.second = 1000; 
 
 #pragma HLS dataflow
   hls::AXIvideo2Mat(input, rgb_buf1);
   hls::GaussianBlur<5, 5>(rgb_buf1, rgb_buf2, (double)1.0, (double)1.0);
   color_filter(rgb_buf2, gs_buf3);
-  centers = compute_center(gs_buf3);
-  ballCenter = compute_ball(rows, cols, centers, ballCenter);
-  
-  draw_output(centers, ballCenter, gs_buf4, rows, cols);
-  hls::CvtColor<HLS_GRAY2RGB>(gs_buf4, rgb_buf5);
-  hls::Mat2AXIvideo(rgb_buf5, output);
+  compute_center(gs_buf3, gs_buf4, paddle_centers);
+  //ballCenter = compute_ball(rows, cols, centers, ballCenter);
+  //draw_output(paddle_centers, ballCenter, gs_buf4, rows, cols);
+  draw_output(gs_buf4, paddle_centers, gs_buf5, rows, cols);
+  hls::CvtColor<HLS_GRAY2RGB>(gs_buf5, rgb_buf6);
+  hls::Mat2AXIvideo(rgb_buf6, output);
 }
 
 
