@@ -101,7 +101,7 @@ void color_filter(RGB_IMAGE& input, GRAY_IMAGE& output) {
 /*
  * Takes a grayscale image and computes XY coordinates of the center of both blobs.
  */
-TUPLE compute_center(GRAY_IMAGE& input) {
+void compute_center(GRAY_IMAGE& input, hls::stream< ap_uint<11> >&paddle_centers) {
 
   GRAY_PIXEL pixel_in;
   TUPLE centers;
@@ -111,10 +111,8 @@ TUPLE compute_center(GRAY_IMAGE& input) {
 
   ap_uint<11> left_min_row = cols;
   ap_uint<11> left_max_row = 0;
-  ap_uint<11> left_center;
   ap_uint<11> right_min_row = cols;
   ap_uint<11> right_max_row = 0;
-  ap_uint<11> right_center;
 
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
@@ -142,7 +140,8 @@ TUPLE compute_center(GRAY_IMAGE& input) {
 
   centers.first = (left_min_row + left_max_row) >> 1;
   centers.second = (right_min_row + right_max_row) >> 1;
-  return centers;
+  paddle_centers.write(centers.first);
+  paddle_centers.write(centers.second);
 } // end function
 
 /*
@@ -226,16 +225,21 @@ void compute_ball(GRAY_IMAGE& output, int rows, int cols) {
 /*
  * This is the main draw function.
  */
-void draw_output(TUPLE centers, TUPLE ballCenter, GRAY_IMAGE& output, int rows, int cols) {
-  GRAY_PIXEL pixel_out;
+void draw_output(hls::stream< ap_uint<11> >&paddle_centers, TUPLE ballCenter, GRAY_IMAGE& output, int rows, int cols) {
   
+  GRAY_PIXEL pixel_out;
+  TUPLE centers;
+
   //ap_uint<8> PADDLE_X_OFFSET = 50; TODELETE<moved to header file
   //~ ap_uint<8> HALF_PADDLE_WIDTH = 5;
   //~ ap_uint<8> HALF_PADDLE_HEIGHT = 25;
   //~ ap_uint<8> BALL_RADIUS = 20; 
   //~ TUPLE ballCenter;
   ballCenter.first = 200;
-  ballCenter.second = 600; 
+  ballCenter.second = 600;
+
+  centers.first = paddle_centers.read();
+  centers.second = paddle_centers.read();
 
   // if centers are at the bounds, assign new values to prevent overflow
   if (centers.first < HALF_PADDLE_HEIGHT)
@@ -337,13 +341,14 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
 
   TUPLE centers;
   TUPLE ballCenter;
+  hls::stream< ap_uint<11> > paddle_centers;
 
 #pragma HLS dataflow
   hls::AXIvideo2Mat(input, rgb_buf1);
   hls::GaussianBlur<5, 5>(rgb_buf1, rgb_buf2, (double)1.0, (double)1.0);
   color_filter(rgb_buf2, gs_buf3);
-  centers = compute_center(gs_buf3);
-  draw_output(centers, ballCenter, gs_buf4, rows, cols);
+  compute_center(gs_buf3, paddle_centers);
+  draw_output(paddle_centers, ballCenter, gs_buf4, rows, cols);
   hls::CvtColor<HLS_GRAY2RGB>(gs_buf4, rgb_buf5);
   hls::Mat2AXIvideo(rgb_buf5, output);
 
