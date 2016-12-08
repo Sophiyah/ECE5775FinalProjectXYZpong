@@ -200,7 +200,6 @@ TUPLE compute_center(GRAY_IMAGE& input) {
   return centers;
 } // end function
 
-
 /*
  * This function handles the ball movement, including paddle collisions and 
  * out of bounds (game over) conditions.
@@ -214,18 +213,18 @@ void compute_ball(GRAY_IMAGE& output, int rows, int cols) {
   ap_uint<11> ball_tempX = 320;
   ap_uint<11> ball_tempY = 240;
 
-int p1_x = 20;
-int p1_y = 210;
+  ap_uint<11> p1_x = PADDLE_X_OFFSET;
+  ap_uint<11> p1_y = 210;
 
-int p1_tempX = 20;
-int p1_tempY = 210;
+  ap_uint<11> p1_tempX = PADDLE_X_OFFSET;
+  ap_uint<11> p1_tempY = 210;
 
-int p2_x = 620;
-int p2_y = 210;
+  ap_uint<11> p2_x = 620;
+  ap_uint<11> p2_y = 210;
 
-int p2_tempX = 620;
-int p2_tempY = 210;
-int n = 0;
+  ap_uint<11> p2_tempX = cols - PADDLE_X_OFFSET;
+  ap_uint<11> p2_tempY = 210;
+  ap_uint<11> n = 0;
     
     
     ball_tempX = ball_x;
@@ -281,14 +280,16 @@ int n = 0;
 /*
  * This is the main draw function.
  */
-void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
+void draw_output(TUPLE centers, TUPLE balCenter, GRAY_IMAGE& output, int rows, int cols) {
   GRAY_PIXEL pixel_out;
-
-  ap_uint<8> HALF_PADDLE_WIDTH = 5;
-  ap_uint<8> HALF_PADDLE_HEIGHT = 25;
-  ap_uint<8> BALL_RADIUS = 200; 
-  ap_uint<16> ballX = 200; 
-  ap_uint<16> ballY = 600; 
+  
+  //ap_uint<8> PADDLE_X_OFFSET = 50; TODELETE<moved to header file
+  //~ ap_uint<8> HALF_PADDLE_WIDTH = 5;
+  //~ ap_uint<8> HALF_PADDLE_HEIGHT = 25;
+  //~ ap_uint<8> BALL_RADIUS = 20; 
+  //~ TUPLE ballCenter;
+  //~ ballCenter.first = 200;
+  //~ ballCenter.second = 600; 
 
   // if centers are at the bounds, assign new values to prevent overflow
   if (centers.first < HALF_PADDLE_HEIGHT)
@@ -307,13 +308,18 @@ void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
   ap_uint<11> right_bot_bound = centers.second + HALF_PADDLE_HEIGHT;
 
   // hardcoded X-axis bounds, the paddle only moves vertically
-  ap_uint<11> left_lft_bound = 50 - HALF_PADDLE_WIDTH;
-  ap_uint<11> left_rgt_bound = 50 + HALF_PADDLE_WIDTH;
-  ap_uint<11> right_lft_bound = cols - 50 - HALF_PADDLE_WIDTH;
-  ap_uint<11> right_rgt_bound = cols - 50 + HALF_PADDLE_WIDTH;
+  ap_uint<11> left_lft_bound = PADDLE_X_OFFSET - HALF_PADDLE_WIDTH;
+  ap_uint<11> left_rgt_bound = PADDLE_X_OFFSET + HALF_PADDLE_WIDTH;
+  ap_uint<11> right_lft_bound = cols - PADDLE_X_OFFSET - HALF_PADDLE_WIDTH;
+  ap_uint<11> right_rgt_bound = cols - PADDLE_X_OFFSET + HALF_PADDLE_WIDTH;
 
   // compute ball boundary 
   //ap_uint<16> ballRadiusSq = BALL_RADIUS* BALL_RADIUS;
+
+  ap_uint<11> ball_left_bound = ballCenter.first - BALL_RADIUS;
+  ap_uint<11> ball_right_bound = ballCenter.first + BALL_RADIUS; 
+  ap_uint<11> ball_top_bound = ballCenter.second - BALL_RADIUS;
+  ap_uint<11> ball_bot_bound = ballCenter.second + BALL_RADIUS;
   
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
@@ -341,7 +347,10 @@ void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
 	
 /*  
 	  // draw ball
-	  else if (distFromBall < ballRadiusSq) {
+	  else if (i > ball_top_bound &&
+             i < ball_bot_bound &&
+             j > ball_left_bound &&
+             j < ball_right_bound ) {
 		  pixel_out.val[0] = 255;
 	  }
 */
