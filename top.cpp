@@ -204,68 +204,61 @@ TUPLE compute_center(GRAY_IMAGE& input) {
  * This function handles the ball movement, including paddle collisions and 
  * out of bounds (game over) conditions.
  */
+TUPLE compute_ball(int rows, int cols, TUPLE pCenters, TUPLE prevBallCenter) {
+  ap_uint<11> ball_x = prevBallCenter.first;
+  ap_uint<11> ball_y = prevBallCenter.second;
 
-/*
-void compute_ball(GRAY_IMAGE& output, int rows, int cols) {
-  /*ap_uint<11> ball_x = 320;
-  ap_uint<11> ball_y = 240;
+  //compute left paddle location
+  ap_uint<11> p1_x = PADDLE_X_OFFSET + 2*HALF_PADDLE_WIDTH;
+  ap_uint<11> p1_y_top = pCenters.first - HALF_PADDLE_HEIGHT;
+  ap_uint<11> p1_y_bot = pCenters.first - HALF_PADDLE_HEIGHT; 
 
-  ap_uint<11> ball_tempX = 320;
-  ap_uint<11> ball_tempY = 240;
+  //compute right paddle location
+  ap_uint<11> p2_x = cols - PADDLE_X_OFFSET - 2*HALF_PADDLE_WIDTH;
+  ap_uint<11> p2_y_top = pCenters.second - HALF_PADDLE_HEIGHT;
+  ap_uint<11> p2_y_bot = pCenters.second - HALF_PADDLE_HEIGHT;
 
-  ap_uint<11> p1_x = PADDLE_X_OFFSET;
-  ap_uint<11> p1_y = 210;
-
-  ap_uint<11> p1_tempX = PADDLE_X_OFFSET;
-  ap_uint<11> p1_tempY = 210;
-
-  ap_uint<11> p2_x = 620;
-  ap_uint<11> p2_y = 210;
-
-  ap_uint<11> p2_tempX = cols - PADDLE_X_OFFSET;
-  ap_uint<11> p2_tempY = 210;
-  ap_uint<11> n = 0;
+  //new ball center initialization
+  TUPLE newBallCent;
+  
+    ap_uint<3> dir = 1; //This will keep track of the circles direction
+            //1= up and left, 2 = down and left, 3 = up and right, 4 = down and right
     
-    
-    ball_tempX = ball_x;
-    ball_tempY = ball_y;
-    
-    int dir; 
 
-    if (dir == 1 && ball_x > 5 && ball_y > 5){
+    if (dir == 1 && ball_x > BALL_RADIUS && ball_y > BALL_RADIUS){
      
-         if( ball_x == p1_x + 15 && ball_y >= p1_y && ball_y <= p1_y + 60){
-                  dir = rand()% 2 + 3;
+         if( ball_x == p1_x + BALL_RADIUS && ball_y >= p1_y_top && ball_y <= p1_y_bot){
+                  dir = 3;
          }else{    
-                 --ball_x;
-                 --ball_y;
+                 newBallCent.first = ball_x - vel;
+                 newBallCent.second = ball_y - vel;
          }    
               
-    } else if (dir == 2 && ball_x > 5 && ball_y < 475){
+    } else if (dir == 2 && ball_x > BALL_RADIUS && ball_y < (rows-BALL_RADIUS) ){
 
-         if( ball_x == p1_x + 15 && ball_y >= p1_y && ball_y <= p1_y + 60){
-                  dir = rand()% 2 + 3;
+         if( ball_x == p1_x + BALL_RADIUS && ball_y >= p1_y_top && ball_y <= p1_y_bot){
+                  dir = 4;
          }else{    
-                 --ball_x;
-                 ++ball_y;
+                 newBallCent.first = ball_x - vel;
+                 newBallCent.second = ball_y + vel;
          }
 
-    } else if (dir == 3 && ball_x < 635 && ball_y > 5){
+    } else if (dir == 3 && ball_x < (cols-BALL_RADIUS) && ball_y > BALL_RADIUS){
 
-         if( ball_x + 5 == p2_x && ball_y >= p2_y && ball_y <= p2_y + 60){
-                  dir = rand()% 2 + 1;
+         if( ball_x + BALL_RADIUS == p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot){
+                  dir = 1;
          }else{    
-                 ++ball_x;
-                 --ball_y;
+                 newBallCent.first = ball_x + vel;
+                 newBallCent.second = ball_y - vel;
          }
 
-    } else if (dir == 4 && ball_x < 635 && ball_y < 475){
+    } else if (dir == 4 && ball_x < (cols - BALL_RADIUS) && ball_y < (rows - BALL_RADIUS) ){
 
-         if( ball_x + 5 == p2_x && ball_y >= p2_y && ball_y <= p2_y + 60){
-                  dir = rand()% 2 + 1;
+         if( ball_x + BALL_RADIUS == p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot){
+                  dir = 2;
          }else{    
-                 ++ball_x;
-                 ++ball_y;
+                 newBallCent.first = ball_x + vel;
+                 newBallCent.second = ball_y + vel;
          }
 
     } else { 
@@ -274,9 +267,9 @@ void compute_ball(GRAY_IMAGE& output, int rows, int cols) {
         else if (dir == 2 || dir == 4)    --dir;
 
     } 
-  */
-}
-*/
+    return newBallCent;
+} //end compute ball function 
+
 
 
 /*
@@ -290,8 +283,8 @@ void draw_output(TUPLE centers, TUPLE ballCenter, GRAY_IMAGE& output, int rows, 
   //~ ap_uint<8> HALF_PADDLE_HEIGHT = 25;
   //~ ap_uint<8> BALL_RADIUS = 20; 
   //~ TUPLE ballCenter;
-  ballCenter.first = 200;
-  ballCenter.second = 600; 
+  //~ ballCenter.first = 200;
+  //~ ballCenter.second = 600; 
 
   // if centers are at the bounds, assign new values to prevent overflow
   if (centers.first < HALF_PADDLE_HEIGHT)
@@ -348,7 +341,7 @@ void draw_output(TUPLE centers, TUPLE ballCenter, GRAY_IMAGE& output, int rows, 
         pixel_out.val[0] = 255;
       }
 	
-/*  
+
 	  // draw ball
 	  else if (i > ball_top_bound &&
              i < ball_bot_bound &&
@@ -356,7 +349,6 @@ void draw_output(TUPLE centers, TUPLE ballCenter, GRAY_IMAGE& output, int rows, 
              j < ball_right_bound ) {
 		  pixel_out.val[0] = 255;
 	  }
-*/
 
       // if no game element, draw black pixel
       else{
@@ -400,6 +392,8 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
 
   TUPLE centers;
   TUPLE ballCenter;
+  ballCenter.first = 600;
+  ballCenter.second = 1000; 
 
 #pragma HLS dataflow
   hls::AXIvideo2Mat(input, rgb_buf1);
@@ -412,12 +406,16 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   hls::And(gs_buf7, gs_buf8, gs_buf9);
   hls::Not(gs_buf9, gs_buf10);
   centers = compute_center(gs_buf10);
-
-
+  ap_uint<8> temCount = 0; 
+//~ while(temCount < 100){
+  ballCenter = compute_ball(rows, cols, centers, ballCenter);
+  std::cout << ballCenter << std::endl;
+  //~ std::cout << std::endl;
+	++temCount; 
+//~ }
   draw_output(centers, ballCenter, gs_buf11, rows, cols);
   hls::CvtColor<HLS_GRAY2RGB>(gs_buf11, rgb_buf12);
   hls::Mat2AXIvideo(rgb_buf12, output);
-
 }
 
 
