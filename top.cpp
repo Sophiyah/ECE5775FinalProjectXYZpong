@@ -150,6 +150,10 @@ TUPLE compute_center(GRAY_IMAGE& input) {
  * out of bounds (game over) conditions.
  */
 TUPLE compute_ball(int rows, int cols, TUPLE pCenters, TUPLE prevBallCenter) {
+ //new ball center initialization
+  ap_uint<11> newBallCentL = ;
+  ap_uint<11> newBallCentR = ; 
+  
   ap_uint<11> ball_x = prevBallCenter.first;
   ap_uint<11> ball_y = prevBallCenter.second;
 
@@ -163,9 +167,7 @@ TUPLE compute_ball(int rows, int cols, TUPLE pCenters, TUPLE prevBallCenter) {
   ap_uint<11> p2_y_top = pCenters.second - HALF_PADDLE_HEIGHT;
   ap_uint<11> p2_y_bot = pCenters.second - HALF_PADDLE_HEIGHT;
 
-  //new ball center initialization
-  TUPLE newBallCent;
-  
+
     ap_uint<3> dir = 1; //This will keep track of the circles direction
             //1= up and left, 2 = down and left, 3 = up and right, 4 = down and right
     
@@ -212,7 +214,10 @@ TUPLE compute_ball(int rows, int cols, TUPLE pCenters, TUPLE prevBallCenter) {
         else if (dir == 2 || dir == 4)    --dir;
 
     } 
-    return newBallCent;
+    
+    newBallCentOut(0,11) = newBallCentL; 
+    newBallCentOut(12,21) = newBallCentR; 
+    newBallCent.write( newBallCentOut);
 } //end compute ball function 
 
 
