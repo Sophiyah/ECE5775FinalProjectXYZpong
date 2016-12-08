@@ -51,9 +51,9 @@
 #define MAX_WIDTH  1920
 #define MAX_HEIGHT 1080
 #define PADDLE_X_OFFSET 50
-#define HALF_PADDLE_WIDTH = 5;
-#define HALF_PADDLE_HEIGHT = 25;
-#define BALL_RADIUS = 20; 
+#define HALF_PADDLE_WIDTH 5
+#define HALF_PADDLE_HEIGHT 25
+#define BALL_RADIUS 20
 
 // I/O Image Settings
 #define INPUT_IMAGE           "test_1080p.bmp"

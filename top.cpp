@@ -204,7 +204,7 @@ TUPLE compute_center(GRAY_IMAGE& input) {
  * out of bounds (game over) conditions.
  */
 void compute_ball(GRAY_IMAGE& output, int rows, int cols) {
-  ap_uint<11> ball_x = 320;
+  /*ap_uint<11> ball_x = 320;
   ap_uint<11> ball_y = 240;
 
   ap_uint<11> ball_tempX = 320;
@@ -226,6 +226,8 @@ void compute_ball(GRAY_IMAGE& output, int rows, int cols) {
     
     ball_tempX = ball_x;
     ball_tempY = ball_y;
+    
+    int dir; 
 
     if (dir == 1 && ball_x > 5 && ball_y > 5){
      
@@ -269,7 +271,7 @@ void compute_ball(GRAY_IMAGE& output, int rows, int cols) {
         else if (dir == 2 || dir == 4)    --dir;
 
     } 
-  
+  */
 }
 
 
@@ -283,19 +285,23 @@ void draw_output(TUPLE centers, TUPLE balCenter, GRAY_IMAGE& output, int rows, i
   //~ ap_uint<8> HALF_PADDLE_WIDTH = 5;
   //~ ap_uint<8> HALF_PADDLE_HEIGHT = 25;
   //~ ap_uint<8> BALL_RADIUS = 20; 
-  //~ TUPLE ballCenter;
-  //~ ballCenter.first = 200;
-  //~ ballCenter.second = 600; 
+  TUPLE ballCenter;
+  ballCenter.first = 200;
+  ballCenter.second = 600; 
 
   // if centers are at the bounds, assign new values to prevent overflow
-  if (centers.first < HALF_PADDLE_HEIGHT)
+  if (centers.first < HALF_PADDLE_HEIGHT){
     centers.first = HALF_PADDLE_HEIGHT;
-  if (centers.first > rows - HALF_PADDLE_HEIGHT)
+	}
+  if (centers.first > rows - HALF_PADDLE_HEIGHT) {
     centers.first = rows - HALF_PADDLE_HEIGHT;
-  if (centers.second < HALF_PADDLE_HEIGHT)
+	}
+  if (centers.second < HALF_PADDLE_HEIGHT) {
     centers.second = HALF_PADDLE_HEIGHT;
-  if (centers.second > rows - HALF_PADDLE_HEIGHT)
+	}
+  if (centers.second > rows - HALF_PADDLE_HEIGHT){
     centers.second = rows - HALF_PADDLE_HEIGHT;
+	}
 
   // compute paddle dimensions based on the centers
   ap_uint<11> left_top_bound = centers.first - HALF_PADDLE_HEIGHT;
@@ -379,12 +385,12 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   RGB_IMAGE rgb_buf3(rows, cols);
   RGB_IMAGE rgb_buf4(rows, cols);
   GRAY_IMAGE gs_buf5(rows, cols);
-  GRAY_IMAGE gs_buf6(rows, cols);
-  GRAY_IMAGE gs_buf7(rows, cols);
-  GRAY_IMAGE gs_buf8(rows, cols);
-  GRAY_IMAGE gs_buf9(rows, cols);
-  GRAY_IMAGE gs_buf10(rows, cols);
-  GRAY_IMAGE gs_buf11(rows, cols);
+  //~ GRAY_IMAGE gs_buf6(rows, cols);
+  //~ GRAY_IMAGE gs_buf7(rows, cols);
+  //~ GRAY_IMAGE gs_buf8(rows, cols);
+  //~ GRAY_IMAGE gs_buf9(rowsh, cols);
+  //~ GRAY_IMAGE gs_buf10(rows, cols);
+  //~ GRAY_IMAGE gs_buf11(rows, cols);
   RGB_IMAGE rgb_buf12(rows, cols);
 
   TUPLE centers;
@@ -393,15 +399,15 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   hls::GaussianBlur<5, 5>(rgb_buf1, rgb_buf2, (double)1.0, (double)1.0);
   hls::Duplicate(rgb_buf2, rgb_buf3, rgb_buf4);
   green_filter(rgb_buf3, gs_buf5);
-  blue_filter(rgb_buf4, gs_buf6);
-  hls::Not(gs_buf5, gs_buf7);
-  hls::Not(gs_buf6, gs_buf8);
-  hls::And(gs_buf7, gs_buf8, gs_buf9);
-  hls::Not(gs_buf9, gs_buf10);
-  centers = compute_center(gs_buf10);
+  //~ blue_filter(rgb_buf4, gs_buf6);
+  //~ hls::Not(gs_buf5, gs_buf7);
+  //~ hls::Not(gs_buf6, gs_buf8);
+  //~ hls::And(gs_buf7, gs_buf8, gs_buf9);
+  //~ hls::Not(gs_buf9, gs_buf10);
+  //~ centers = compute_center(gs_buf10);
 
-  draw_output(centers, gs_buf11, rows, cols);
-  hls::CvtColor<HLS_GRAY2RGB>(gs_buf11, rgb_buf12);
+  //~ draw_output(centers, gs_buf11, rows, cols);
+  hls::CvtColor<HLS_GRAY2RGB>(gs_buf5, rgb_buf12);
   hls::Mat2AXIvideo(rgb_buf12, output);
 
 }
