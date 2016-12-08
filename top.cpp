@@ -185,7 +185,8 @@ TUPLE compute_center(GRAY_IMAGE& input) {
       }
 
       // detect blue on the right side
-      else if (pixel_in.val[0] == 2 && j > (cols-250) && j < (cols-50)) {
+      //if (pixel_in.val[0] == 255 && j > (cols-250) && j < (cols-50)) {
+      if (pixel_in.val[0] == 2 && j > (cols-250) && j < (cols-50)) {
         if (i < right_min_row)
           right_min_row = i;
         if (i > right_max_row)
@@ -204,6 +205,8 @@ TUPLE compute_center(GRAY_IMAGE& input) {
  * This function handles the ball movement, including paddle collisions and 
  * out of bounds (game over) conditions.
  */
+
+/*
 void compute_ball(GRAY_IMAGE& output, int rows, int cols) {
   ap_uint<11> ball_x = 320;
   ap_uint<11> ball_y = 240;
@@ -272,6 +275,7 @@ int n = 0;
     } 
   
 }
+*/
 
 
 /*
@@ -309,17 +313,15 @@ void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
   ap_uint<11> right_rgt_bound = cols - 50 + HALF_PADDLE_WIDTH;
 
   // compute ball boundary 
-  ap_uint<16> ballRadiusSq = BALL_RADIUS* BALL_RADIUS;
-  
-  //if ball center is at bounds, 
-  
+  //ap_uint<16> ballRadiusSq = BALL_RADIUS* BALL_RADIUS;
   
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
 #pragma HLS LOOP_FLATTEN_OFF
 #pragma HLS PIPELINE
+
 	  //compute distance current pixel is from ball
-	  ap_uint<64> distFromBall = ((i- ballX)*(i-ballX)) + (j - ballY)*(j-ballY);
+	  //ap_uint<64> distFromBall = ((i- ballX)*(i-ballX)) + (j - ballY)*(j-ballY);
       
       // draw left paddle
       if (i > left_top_bound &&
@@ -336,11 +338,13 @@ void draw_output(TUPLE centers, GRAY_IMAGE& output, int rows, int cols) {
                j < right_rgt_bound) {
         pixel_out.val[0] = 255;
       }
-	  
+	
+/*  
 	  // draw ball
 	  else if (distFromBall < ballRadiusSq) {
 		  pixel_out.val[0] = 255;
 	  }
+*/
 
       // if no game element, draw black pixel
       else{
@@ -368,6 +372,7 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   #pragma HLS INTERFACE ap_stable port=rows
   #pragma HLS INTERFACE ap_stable port=cols
 
+
   RGB_IMAGE rgb_buf1(rows, cols);
   RGB_IMAGE rgb_buf2(rows, cols);
   RGB_IMAGE rgb_buf3(rows, cols);
@@ -383,6 +388,7 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
 
   TUPLE centers;
 
+#pragma HLS dataflow
   hls::AXIvideo2Mat(input, rgb_buf1);
   hls::GaussianBlur<5, 5>(rgb_buf1, rgb_buf2, (double)1.0, (double)1.0);
   hls::Duplicate(rgb_buf2, rgb_buf3, rgb_buf4);
@@ -393,7 +399,6 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   hls::And(gs_buf7, gs_buf8, gs_buf9);
   hls::Not(gs_buf9, gs_buf10);
   centers = compute_center(gs_buf10);
-
   draw_output(centers, gs_buf11, rows, cols);
   hls::CvtColor<HLS_GRAY2RGB>(gs_buf11, rgb_buf12);
   hls::Mat2AXIvideo(rgb_buf12, output);
