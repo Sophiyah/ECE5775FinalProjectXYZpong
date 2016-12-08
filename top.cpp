@@ -56,101 +56,46 @@
 #include "top.h"
 #include <stdlib.h>
 
+
 /*
- * Converts an RGB image to detect red. Outputs a single channel (grayscale) image.
+ * Outputs the green and blue filtered image in grayscale.
  */
-/*
-void red_filter(RGB_IMAGE& input, GRAY_IMAGE& output) {
+void color_filter(RGB_IMAGE& input, GRAY_IMAGE& output) {
+
+  RGB_PIXEL pixel_in;
+  GRAY_PIXEL pixel_out;
 
   HLS_SIZE_T rows = input.rows;
   HLS_SIZE_T cols = input.cols;
 
-  GRAY_IMAGE img_r1(rows, cols);
-  GRAY_IMAGE img_g1(rows, cols);
-  GRAY_IMAGE img_b1(rows, cols);
-  GRAY_IMAGE img_r2(rows, cols);
-  GRAY_IMAGE img_g2(rows, cols);
-  GRAY_IMAGE img_b2(rows, cols);
-  GRAY_IMAGE img_g3(rows, cols);
-  GRAY_IMAGE img_b3(rows, cols);
-  GRAY_IMAGE img_and_buf(rows, cols);
-  GRAY_IMAGE img_thres_buf(rows, cols);
+  for (HLS_SIZE_T i=0; i<rows; i++) {
+    for (HLS_SIZE_T j=0; j<cols; j++) {
+#pragma HLS LOOP_FLATTEN_OFF
+#pragma HLS PIPELINE
 
-  hls::Split(input, img_b1, img_g1, img_r1);
-  hls::Threshold(img_r1, img_r2, 60, 255, 0); // red image
-  hls::Threshold(img_g1, img_g2, 20, 255, 0); // green image
-  hls::Threshold(img_b1, img_b2, 40, 255, 0); // blue image
-  hls::Not(img_g2, img_g3); // not green image
-  hls::Not(img_b2, img_b3); // not blue image
-  hls::And(img_r2, img_g3, img_and_buf);
-  hls::And(img_b3, img_and_buf, img_thres_buf);
-  hls::Threshold(img_thres_buf, output, 127, 1, 0); // red image
+      input >> pixel_in;
 
-}*/
+      // val[0] is blue, val[1] is green, val[2] is red
+      // find green pixels
+      if (pixel_in.val[0] < 80 &&
+          pixel_in.val[1] > 60 &&
+          pixel_in.val[2] < 40)
+        pixel_out.val[0] = 127;
 
+      // find blue pixels
+      else if (pixel_in.val[0] > 50 &&
+               pixel_in.val[1] < 30 &&
+               pixel_in.val[2] < 30)
+        pixel_out.val[0] = 255;
 
-/*
- * Converts an RGB image to detect green. Outputs a single channel (grayscale) image.
- */
-void green_filter(RGB_IMAGE& input, GRAY_IMAGE& output) {
+      else
+        pixel_out.val[0] = 0;
 
-  HLS_SIZE_T rows = input.rows;
-  HLS_SIZE_T cols = input.cols;
+      output << pixel_out;
 
-  GRAY_IMAGE img_r1(rows, cols);
-  GRAY_IMAGE img_g1(rows, cols);
-  GRAY_IMAGE img_b1(rows, cols);
-  GRAY_IMAGE img_r2(rows, cols);
-  GRAY_IMAGE img_g2(rows, cols);
-  GRAY_IMAGE img_b2(rows, cols);
-  GRAY_IMAGE img_r3(rows, cols);
-  GRAY_IMAGE img_b3(rows, cols);
-  GRAY_IMAGE img_and_buf(rows, cols);
-  GRAY_IMAGE img_thres_buf(rows, cols);
-
-  hls::Split(input, img_b1, img_g1, img_r1);
-  hls::Threshold(img_r1, img_r2, 40, 255, 0); // red image
-  hls::Threshold(img_g1, img_g2, 60, 255, 0); // green image
-  hls::Threshold(img_b1, img_b2, 80, 255, 0); // blue image
-  hls::Not(img_r2, img_r3); // not red image
-  hls::Not(img_b2, img_b3); // not blue image
-  hls::And(img_g2, img_r3, img_and_buf);
-  hls::And(img_b3, img_and_buf, img_thres_buf);
-  hls::Threshold(img_thres_buf, output, 127, 1, 0); // green image
-
-}
-
-
-/*
- * Converts an RGB image to detect blue. Outputs a single channel (grayscale) image.
- */
-void blue_filter(RGB_IMAGE& input, GRAY_IMAGE& output) {
-
-  HLS_SIZE_T rows = input.rows;
-  HLS_SIZE_T cols = input.cols;
-
-  GRAY_IMAGE img_r1(rows, cols);
-  GRAY_IMAGE img_g1(rows, cols);
-  GRAY_IMAGE img_b1(rows, cols);
-  GRAY_IMAGE img_r2(rows, cols);
-  GRAY_IMAGE img_g2(rows, cols);
-  GRAY_IMAGE img_b2(rows, cols);
-  GRAY_IMAGE img_r3(rows, cols);
-  GRAY_IMAGE img_g3(rows, cols);
-  GRAY_IMAGE img_and_buf(rows, cols);
-  GRAY_IMAGE img_thres_buf(rows, cols);
-
-  hls::Split(input, img_b1, img_g1, img_r1);
-  hls::Threshold(img_r1, img_r2, 30, 255, 0); // red image
-  hls::Threshold(img_g1, img_g2, 30, 255, 0); // green image
-  hls::Threshold(img_b1, img_b2, 50, 255, 0); // blue image
-  hls::Not(img_r2, img_r3); // not red image
-  hls::Not(img_g2, img_g3); // not green image
-  hls::And(img_b2, img_r3, img_and_buf);
-  hls::And(img_g3, img_and_buf, img_thres_buf);
-  hls::Threshold(img_thres_buf, output, 127, 2, 0); // blue image
-
-}
+    } // end inner for loop
+  } // end outer for loop
+} // end function
 
 
 /*
@@ -177,7 +122,7 @@ TUPLE compute_center(GRAY_IMAGE& input) {
 #pragma HLS PIPELINE
       input >> pixel_in;
       // detect green on the left side
-      if (pixel_in.val[0] == 1 && j > 50 && j < 250) {
+      if (pixel_in.val[0] == 127 && j > 50 && j < 250) {
         if (i < left_min_row)
           left_min_row = i;
         if (i > left_max_row)
@@ -186,7 +131,7 @@ TUPLE compute_center(GRAY_IMAGE& input) {
 
       // detect blue on the right side
       //if (pixel_in.val[0] == 255 && j > (cols-250) && j < (cols-50)) {
-      if (pixel_in.val[0] == 2 && j > (cols-250) && j < (cols-50)) {
+      if (pixel_in.val[0] == 255 && j > (cols-250) && j < (cols-50)) {
         if (i < right_min_row)
           right_min_row = i;
         if (i > right_max_row)
@@ -273,10 +218,9 @@ void compute_ball(GRAY_IMAGE& output, int rows, int cols) {
         if (dir == 1 || dir == 3)    ++dir;
         else if (dir == 2 || dir == 4)    --dir;
 
-    } 
+    }
+  }
   */
-}
-*/
 
 
 /*
@@ -336,17 +280,17 @@ void draw_output(TUPLE centers, TUPLE ballCenter, GRAY_IMAGE& output, int rows, 
       if (i > left_top_bound &&
           i < left_bot_bound &&
           j > left_lft_bound &&
-          j < left_rgt_bound) {
+          j < left_rgt_bound)
         pixel_out.val[0] = 255;
-      }
+
 
       // draw right paddle
       else if (i > right_top_bound &&
                i < right_bot_bound &&
                j > right_lft_bound &&
-               j < right_rgt_bound) {
+               j < right_rgt_bound)
         pixel_out.val[0] = 255;
-      }
+
 	
 /*  
 	  // draw ball
@@ -359,9 +303,9 @@ void draw_output(TUPLE centers, TUPLE ballCenter, GRAY_IMAGE& output, int rows, 
 */
 
       // if no game element, draw black pixel
-      else{
+      else
         pixel_out.val[0] = 0;
-	  }
+
     output << pixel_out;
 
     } // end inner for loop
@@ -387,16 +331,9 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
 
   RGB_IMAGE rgb_buf1(rows, cols);
   RGB_IMAGE rgb_buf2(rows, cols);
-  RGB_IMAGE rgb_buf3(rows, cols);
-  RGB_IMAGE rgb_buf4(rows, cols);
-  GRAY_IMAGE gs_buf5(rows, cols);
-  GRAY_IMAGE gs_buf6(rows, cols);
-  GRAY_IMAGE gs_buf7(rows, cols);
-  GRAY_IMAGE gs_buf8(rows, cols);
-  GRAY_IMAGE gs_buf9(rows, cols);
-  GRAY_IMAGE gs_buf10(rows, cols);
-  GRAY_IMAGE gs_buf11(rows, cols);
-  RGB_IMAGE rgb_buf12(rows, cols);
+  GRAY_IMAGE gs_buf3(rows, cols);
+  GRAY_IMAGE gs_buf4(rows, cols);
+  RGB_IMAGE rgb_buf5(rows, cols);
 
   TUPLE centers;
   TUPLE ballCenter;
@@ -404,19 +341,11 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
 #pragma HLS dataflow
   hls::AXIvideo2Mat(input, rgb_buf1);
   hls::GaussianBlur<5, 5>(rgb_buf1, rgb_buf2, (double)1.0, (double)1.0);
-  hls::Duplicate(rgb_buf2, rgb_buf3, rgb_buf4);
-  green_filter(rgb_buf3, gs_buf5);
-  blue_filter(rgb_buf4, gs_buf6);
-  hls::Not(gs_buf5, gs_buf7);
-  hls::Not(gs_buf6, gs_buf8);
-  hls::And(gs_buf7, gs_buf8, gs_buf9);
-  hls::Not(gs_buf9, gs_buf10);
-  centers = compute_center(gs_buf10);
-
-
-  draw_output(centers, ballCenter, gs_buf11, rows, cols);
-  hls::CvtColor<HLS_GRAY2RGB>(gs_buf11, rgb_buf12);
-  hls::Mat2AXIvideo(rgb_buf12, output);
+  color_filter(rgb_buf2, gs_buf3);
+  centers = compute_center(gs_buf3);
+  draw_output(centers, ballCenter, gs_buf4, rows, cols);
+  hls::CvtColor<HLS_GRAY2RGB>(gs_buf4, rgb_buf5);
+  hls::Mat2AXIvideo(rgb_buf5, output);
 
 }
 
