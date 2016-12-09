@@ -79,13 +79,13 @@ void color_filter(RGB_IMAGE& input, GRAY_IMAGE& output) {
       if (pixel_in.val[0] < 80 &&
           pixel_in.val[1] > 60 &&
           pixel_in.val[2] < 40)
-        pixel_out.val[0] = 127;
+        pixel_out.val[0] = 1;
 
       // find blue pixels
       else if (pixel_in.val[0] > 50 &&
                pixel_in.val[1] < 30 &&
                pixel_in.val[2] < 30)
-        pixel_out.val[0] = 255;
+        pixel_out.val[0] = 2;
 
       else
         pixel_out.val[0] = 0;
@@ -131,7 +131,7 @@ void compute_center(GRAY_IMAGE& input, GRAY_IMAGE& output, hls::stream< ap_uint<
 
       input >> pixel_in;
       // detect green on the left side
-      if (pixel_in.val[0] == 127 && j > 50 && j < 250) {
+      if (pixel_in.val[0] == 1 && j > 50 && j < 250) {
         if (i < left_min_row)
           left_min_row = i;
         if (i > left_max_row)
@@ -139,7 +139,7 @@ void compute_center(GRAY_IMAGE& input, GRAY_IMAGE& output, hls::stream< ap_uint<
       }
 
       // detect blue on the right side
-      if (pixel_in.val[0] == 255 && j > (cols-250) && j < (cols-50)) {
+      if (pixel_in.val[0] == 2 && j > (cols-250) && j < (cols-50)) {
         if (i < right_min_row)
           right_min_row = i;
         if (i > right_max_row)
@@ -157,13 +157,13 @@ void compute_center(GRAY_IMAGE& input, GRAY_IMAGE& output, hls::stream< ap_uint<
   left_center = (left_min_row + left_max_row) >> 1;
   right_center = (right_min_row + right_max_row) >> 1;
 
-  ap_uint<11> left_temp0;
-  ap_uint<11> right_temp0;
+  ap_uint<11> left_RAW_buffer;
+  ap_uint<11> right_RAW_buffer;
 
-  left_temp0 = left_center;
-  right_temp0 = right_center;
-  prev_left_center = left_temp0;
-  prev_right_center = right_temp0;
+  left_RAW_buffer = left_center;
+  right_RAW_buffer = right_center;
+  prev_left_center = left_RAW_buffer;
+  prev_right_center = right_RAW_buffer;
 
 } // end function
 
@@ -279,7 +279,6 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   #pragma HLS INTERFACE ap_stable port=rows
   #pragma HLS INTERFACE ap_stable port=cols
 
-
   RGB_IMAGE rgb_buf1(rows, cols);
   RGB_IMAGE rgb_buf2(rows, cols);
   GRAY_IMAGE gs_buf3(rows, cols);
@@ -288,8 +287,6 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   RGB_IMAGE rgb_buf6(rows, cols);
 
   hls::stream< ap_uint<22> > paddle_stream;
-  //ballCenter.first = 600;
-  //ballCenter.second = 1000; 
 
 #pragma HLS dataflow
   hls::AXIvideo2Mat(input, rgb_buf1);
@@ -297,28 +294,8 @@ void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
   color_filter(rgb_buf2, gs_buf3);
   compute_center(gs_buf3, gs_buf4, paddle_stream);
   //ballCenter = compute_ball(rows, cols, centers, ballCenter);
-  //draw_output(paddle_centers, ballCenter, gs_buf4, rows, cols);
   draw_output(gs_buf4, paddle_stream, gs_buf5, rows, cols);
   hls::CvtColor<HLS_GRAY2RGB>(gs_buf5, rgb_buf6);
   hls::Mat2AXIvideo(rgb_buf6, output);
+
 }
-
-
-
-/*
-    //hls::GaussianBlur<5, 5>(img_0, img_1, (double)1.0, (double)1.0);
-    //hls::CvtColor<HLS_RGB2GRAY, rows, cols, >(img_0, img_1, HLS_RGB2GRAY);
-    //hls::CvtColor<HLS_RGB2GRAY>(img_1, img_2);
-    //hls::Threshold<>(img_2, img_3, 127, 255, 0);
-    //hls::CvtColor<HLS_GRAY2RGB>(img_r_1, img_r_2);
-*/
-
-/*
-    hls::Sobel<1,0,3>(img_0, img_1); 
-    hls::SubS(img_1, pix, img_2);
-    hls::Scale(img_2, img_3, 2, 0);
-    hls::Erode(img_3, img_4);
-    hls::Dilate(img_4, img_5);
-    hls::Mat2AXIvideo(img_5, output);
-}
-*/
