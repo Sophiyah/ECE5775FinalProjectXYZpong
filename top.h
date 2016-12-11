@@ -54,9 +54,9 @@
 // game logic variables
 #define PADDLE_X_OFFSET 50
 #define HALF_PADDLE_WIDTH 5
-#define HALF_PADDLE_HEIGHT 25
+#define HALF_PADDLE_HEIGHT 50
 #define BALL_RADIUS 20
-#define vel 100
+#define vel 20
 
 // I/O Image Settings
 #define INPUT_IMAGE           "test_1080p.bmp"
@@ -69,7 +69,6 @@ typedef hls::Scalar<3, unsigned char>                 RGB_PIXEL;
 typedef hls::Scalar<1, unsigned char>                 GRAY_PIXEL;
 typedef hls::Mat<MAX_HEIGHT, MAX_WIDTH, HLS_8UC3>     RGB_IMAGE;
 typedef hls::Mat<MAX_HEIGHT, MAX_WIDTH, HLS_8UC1>     GRAY_IMAGE;
-typedef std::pair<ap_uint<11>, ap_uint<11> >          TUPLE;
 
 // top level function for HW synthesis
 void image_filter(AXI_STREAM& src_axi, AXI_STREAM& dst_axi, int rows, int cols);
