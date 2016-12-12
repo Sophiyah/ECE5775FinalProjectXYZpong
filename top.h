@@ -55,13 +55,22 @@
 #define PADDLE_X_OFFSET 50
 #define HALF_PADDLE_WIDTH 5
 #define HALF_PADDLE_HEIGHT 50
-#define BALL_RADIUS 20
-#define vel 15
+#define BALL_RADIUS 145
+#define vel 70
 
 // I/O Image Settings
 #define INPUT_IMAGE           "test_1080p.bmp"
-#define OUTPUT_IMAGE          "result_1080p.bmp"
-#define OUTPUT_IMAGE_GOLDEN   "result_1080p_golden.bmp"
+#define OUTPUT_IMAGE0         "result_1080p.bmp"
+#define OUTPUT_IMAGE1  		  "result_1080p_1.bmp"
+#define OUTPUT_IMAGE2  		  "result_1080p_2.bmp"
+#define OUTPUT_IMAGE3  		  "result_1080p_3.bmp"
+#define OUTPUT_IMAGE4  		  "result_1080p_4.bmp"
+#define OUTPUT_IMAGE5  		  "result_1080p_5.bmp"
+#define OUTPUT_IMAGE6  		  "result_1080p_6.bmp"
+#define OUTPUT_IMAGE7  		  "result_1080p_7.bmp"
+#define OUTPUT_IMAGE8  		  "result_1080p_8.bmp"
+#define OUTPUT_IMAGE9  		  "result_1080p_9.bmp"
+#define OUTPUT_IMAGE10  	  "result_1080p_10.bmp"
 
 // typedef video library core structures
 typedef hls::stream<ap_axiu<32,1,1,1> >               AXI_STREAM;
