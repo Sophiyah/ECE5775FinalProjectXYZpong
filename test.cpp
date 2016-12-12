@@ -48,29 +48,104 @@ int main (int argc, char** argv) {
     IplImage* src = cvLoadImage(INPUT_IMAGE);
 std::cout<< "Size = " << cvGetSize(src).width << ", " << cvGetSize(src).height << std::endl;
 
-    IplImage* dst1 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
+    IplImage* dst0 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
     //IplImage* dst1 = cvCreateImage(cvGetSize(src), src->depth, 1);
-    IplImage* dst2 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
+    IplImage* dst1 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
     //IplImage* dst2 = cvCreateImage(cvGetSize(src), src->depth, 1);
+    IplImage* dst2 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
+    IplImage* dst3 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
+    IplImage* dst4 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
+    IplImage* dst5 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
+    IplImage* dst6 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
+    IplImage* dst7 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
+    IplImage* dst8 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
+    IplImage* dst9 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
+    IplImage* dst10 = cvCreateImage(cvGetSize(src), src->depth, src->nChannels);
     
     AXI_STREAM  src_axi, dst_axi;
     IplImage2AXIvideo(src, src_axi);
 
     image_filter(src_axi, dst_axi, src->height, src->width);
 
-    AXIvideo2IplImage(dst_axi, dst1);
+    AXIvideo2IplImage(dst_axi, dst0);
 
-    cvSaveImage(OUTPUT_IMAGE, dst1);
+    cvSaveImage(OUTPUT_IMAGE0, dst0);
     
-    opencv_image_filter(src, dst2);
-    cvSaveImage(OUTPUT_IMAGE_GOLDEN, dst2);
+    //second frame
+    IplImage2AXIvideo(dst0, src_axi);
+    image_filter(src_axi, dst_axi, src->height, src->width);
+    AXIvideo2IplImage(dst_axi, dst1);
+    cvSaveImage(OUTPUT_IMAGE1, dst1);
+    
+    //frame 3
+    IplImage2AXIvideo(dst1, src_axi);
+    image_filter(src_axi, dst_axi, src->height, src->width);
+    AXIvideo2IplImage(dst_axi, dst2);
+    cvSaveImage(OUTPUT_IMAGE2, dst2);
+    
+    //frame 4
+    IplImage2AXIvideo(dst2, src_axi);
+    image_filter(src_axi, dst_axi, src->height, src->width);
+    AXIvideo2IplImage(dst_axi, dst3);
+    cvSaveImage(OUTPUT_IMAGE3, dst3);
+    
+    //frame 5
+    IplImage2AXIvideo(dst3, src_axi);
+    image_filter(src_axi, dst_axi, src->height, src->width);
+    AXIvideo2IplImage(dst_axi, dst4);
+    cvSaveImage(OUTPUT_IMAGE4, dst4);
+    
+    //frame 6
+    IplImage2AXIvideo(dst4, src_axi);
+    image_filter(src_axi, dst_axi, src->height, src->width);
+    AXIvideo2IplImage(dst_axi, dst5);
+    cvSaveImage(OUTPUT_IMAGE5, dst5);
 
+    //frame 7
+    IplImage2AXIvideo(dst5, src_axi);
+    image_filter(src_axi, dst_axi, src->height, src->width);
+    AXIvideo2IplImage(dst_axi, dst6);
+    cvSaveImage(OUTPUT_IMAGE6, dst6);
+    
+    //frame 8
+    IplImage2AXIvideo(dst6, src_axi);
+    image_filter(src_axi, dst_axi, src->height, src->width);
+    AXIvideo2IplImage(dst_axi, dst7);
+    cvSaveImage(OUTPUT_IMAGE7, dst7);
+
+    //frame 9
+    IplImage2AXIvideo(dst7, src_axi);
+    image_filter(src_axi, dst_axi, src->height, src->width);
+    AXIvideo2IplImage(dst_axi, dst8);
+    cvSaveImage(OUTPUT_IMAGE8, dst8);
+    
+    //frame 10
+    IplImage2AXIvideo(dst8, src_axi);
+    image_filter(src_axi, dst_axi, src->height, src->width);
+    AXIvideo2IplImage(dst_axi, dst9);
+    cvSaveImage(OUTPUT_IMAGE9, dst9);
+    
+    //frame 11
+    IplImage2AXIvideo(dst9, src_axi);
+    image_filter(src_axi, dst_axi, src->height, src->width);
+    AXIvideo2IplImage(dst_axi, dst10);
+    cvSaveImage(OUTPUT_IMAGE10, dst10);
+    
     cvReleaseImage(&src);
     cvReleaseImage(&dst1);
     cvReleaseImage(&dst2);
+    cvReleaseImage(&dst3);
+    cvReleaseImage(&dst4);
+	cvReleaseImage(&dst5);
+	cvReleaseImage(&dst6);
+	cvReleaseImage(&dst7);
+	cvReleaseImage(&dst8);
+	cvReleaseImage(&dst9);
+	cvReleaseImage(&dst10);
+	
 
     char tempbuf[2000];
-    sprintf(tempbuf, "diff --brief -w %s %s", OUTPUT_IMAGE, OUTPUT_IMAGE_GOLDEN);
+    sprintf(tempbuf, "diff --brief -w %s %s", OUTPUT_IMAGE0, OUTPUT_IMAGE1);
     int ret = system(tempbuf);
 
     /*
