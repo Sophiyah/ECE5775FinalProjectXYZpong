@@ -100,30 +100,26 @@ void color_filter(RGB_IMAGE& input, GRAY_IMAGE& output) {
  * This function handles the ball movement, including paddle collisions and 
  * out of bounds (game over) conditions.
  */
-ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, int rows, int cols) { 
+ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, ap_uint<22> prevBallCenter, int rows, int cols) { 
 
   //new ball center initialization
   ap_uint<11> newBallCentX;
   ap_uint<11> newBallCentY; 
   
-  //initialize previous ball center information, start the ball somewhere in the middle 
-  static ap_uint<11> prevBallCenterX = 700;
-  static ap_uint<11> prevBallCenterY = 500;
-  
   //initialize ball logic variables   
-  ap_uint<11> ball_x = prevBallCenterX;
-  ap_uint<11> ball_y = prevBallCenterY;
+  ap_uint<11> ball_x = prevBallCenter(10,0);
+  ap_uint<11> ball_y = prevBallCenter(21,11);
   ap_uint<22> BallCenter;
 
   //compute left paddle location
   ap_uint<11> p1_x = PADDLE_X_OFFSET + 2*HALF_PADDLE_WIDTH;
   ap_uint<11> p1_y_top = pCenters_left - HALF_PADDLE_HEIGHT;
-  ap_uint<11> p1_y_bot = pCenters_left - HALF_PADDLE_HEIGHT; 
+  ap_uint<11> p1_y_bot = pCenters_left + HALF_PADDLE_HEIGHT; 
 
   //compute right paddle location
   ap_uint<11> p2_x = cols - PADDLE_X_OFFSET - 2*HALF_PADDLE_WIDTH;
   ap_uint<11> p2_y_top = pCenters_right - HALF_PADDLE_HEIGHT;
-  ap_uint<11> p2_y_bot = pCenters_right - HALF_PADDLE_HEIGHT;
+  ap_uint<11> p2_y_bot = pCenters_right + HALF_PADDLE_HEIGHT;
 
 
     ap_uint<3> dir = 1; //This will keep track of the circles direction
@@ -132,7 +128,7 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
 
     if (dir == 1 && ball_x > BALL_RADIUS && ball_y > BALL_RADIUS){
      
-         if( ball_x == p1_x + BALL_RADIUS && ball_y >= p1_y_top && ball_y <= p1_y_bot){
+         if( ball_x <= (p1_x + BALL_RADIUS) && ball_y >= p1_y_top && ball_y <= p1_y_bot){
                   dir = 3;
          }else{    
                  newBallCentX = ball_x - vel;
@@ -141,7 +137,7 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
               
     } else if (dir == 2 && ball_x > BALL_RADIUS && ball_y < (rows-BALL_RADIUS) ){
 
-         if( ball_x == p1_x + BALL_RADIUS && ball_y >= p1_y_top && ball_y <= p1_y_bot){
+         if( ball_x <= (p1_x + BALL_RADIUS) && ball_y >= p1_y_top && ball_y <= p1_y_bot){
                   dir = 4;
          }else{    
                  newBallCentX = ball_x - vel;
@@ -150,7 +146,7 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
 
     } else if (dir == 3 && ball_x < (cols-BALL_RADIUS) && ball_y > BALL_RADIUS){
 
-         if( ball_x + BALL_RADIUS == p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot){
+         if( (ball_x + BALL_RADIUS) >= p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot){
                   dir = 1;
          }else{    
                  newBallCentX = ball_x + vel;
@@ -159,7 +155,7 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
 
     } else if (dir == 4 && ball_x < (cols - BALL_RADIUS) && ball_y < (rows - BALL_RADIUS) ){
 
-         if( ball_x + BALL_RADIUS == p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot){
+         if( (ball_x + BALL_RADIUS) >= p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot){
                   dir = 2;
          }else{    
                  newBallCentX = ball_x + vel;
@@ -168,18 +164,24 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
 
     } else { 
 
-        if (dir == 1 || dir == 3)    ++dir;
-        else if (dir == 2 || dir == 4)    --dir;
+        if (dir == 1) {
+			dir = 4;
+		}
+		else if (dir ==2) {
+			dir = 3;
+		}
+		else if (dir == 3) {
+			dir = 2;
+		}
+        else {
+			dir = 1;
+		}
 
     } 
-	
-	//update for next iteration
-    prevBallCenterX = newBallCentX; 
-    prevBallCenterY = newBallCentY;
     
     //pack the ball center information into one variable
-    BallCenter(10,0) = prevBallCenterX;
-    BallCenter(21,11) = prevBallCenterY;
+    BallCenter(10,0) = newBallCentX;
+    BallCenter(21,11) = newBallCentY;
     
     return BallCenter;
        
@@ -209,7 +211,7 @@ void compute_center(GRAY_IMAGE& input, GRAY_IMAGE& output, hls::stream< ap_uint<
   //static variables that hold value from iteration to iteration
   static ap_uint<11> prev_left_center;
   static ap_uint<11> prev_right_center;
-  static ap_uint<22> prevBallCenter;
+  static ap_uint<22> prevBallCenter= 819800; //start the ball somewhere in the middle
 
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
@@ -248,7 +250,7 @@ void compute_center(GRAY_IMAGE& input, GRAY_IMAGE& output, hls::stream< ap_uint<
   left_center = (left_min_row + left_max_row) >> 1;
   right_center = (right_min_row + right_max_row) >> 1;
   //calculate new ball position
-  ballCenter = compute_ball(left_center, right_center, rows, cols);
+  ballCenter = compute_ball(left_center, right_center, prevBallCenter, rows, cols);
    
   ap_uint<11> left_RAW_buffer;
   ap_uint<11> right_RAW_buffer;

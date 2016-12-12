@@ -56,7 +56,7 @@
 #define HALF_PADDLE_WIDTH 5
 #define HALF_PADDLE_HEIGHT 50
 #define BALL_RADIUS 20
-#define vel 20
+#define vel 15
 
 // I/O Image Settings
 #define INPUT_IMAGE           "test_1080p.bmp"
