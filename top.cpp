@@ -96,100 +96,135 @@ void color_filter(RGB_IMAGE& input, GRAY_IMAGE& output) {
   } // end outer for loop
 } // end function
 
+
 /*
- * This function handles the ball movement, including paddle collisions and 
- * out of bounds (game over) conditions.
+ * This function handles the ball movement, including paddle collisions and out of bounds (game over) conditions.
  */
 ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, ap_uint<22> prevBallCenter, int rows, int cols) { 
 
-  //new ball center initialization
+#pragma HLS PIPELINE
+
+  // new ball center initialization
   ap_uint<11> newBallCentX=prevBallCenter(10,0);
   ap_uint<11> newBallCentY=prevBallCenter(21,11); 
   
-  //initialize ball logic variables   
+  // initialize ball logic variables   
   ap_uint<11> ball_x = prevBallCenter(10,0);
   ap_uint<11> ball_y = prevBallCenter(21,11);
   ap_uint<22> BallCenter;
 
-  //compute left paddle location
+  // compute left paddle location
   ap_uint<11> p1_x = PADDLE_X_OFFSET + HALF_PADDLE_WIDTH;
   ap_uint<11> p1_y_top = pCenters_left - HALF_PADDLE_HEIGHT;
   ap_uint<11> p1_y_bot = pCenters_left + HALF_PADDLE_HEIGHT; 
 
-  //compute right paddle location
+  // compute right paddle location
   ap_uint<11> p2_x = cols - PADDLE_X_OFFSET - HALF_PADDLE_WIDTH;
   ap_uint<11> p2_y_top = pCenters_right - HALF_PADDLE_HEIGHT;
   ap_uint<11> p2_y_bot = pCenters_right + HALF_PADDLE_HEIGHT;
 
+  // 1 = up and left, 2 = down and left, 3 = up and right, 4 = down and right
+  static ap_uint<3> dir = 2; // This will keep track of the circles direction
 
-    static ap_uint<3> dir = 2; //This will keep track of the circles direction
-            //1= up and left, 2 = down and left, 3 = up and right, 4 = down and right
-
-    if (dir == 1 && ball_x > BALL_RADIUS && ball_y > BALL_RADIUS){
+  if (dir == 1 &&
+      ball_x > BALL_RADIUS &&
+      ball_y > BALL_RADIUS) {
      
-         if( ball_x <= (p1_x + BALL_RADIUS) && ball_y >= p1_y_top && ball_y <= p1_y_bot){
-                  dir = 3;
-         }else{    
-                 newBallCentX = ball_x - vel;
-                 newBallCentY = ball_y - vel;
-         }    
+    if( ball_x <= (p1_x + BALL_RADIUS) &&
+        ball_y >= p1_y_top &&
+        ball_y <= p1_y_bot) {
+      dir = 3;
+    }
+
+    else {    
+      newBallCentX = ball_x - vel;
+      newBallCentY = ball_y - vel;
+    }    
               
-    } else if (dir == 2 && ball_x > BALL_RADIUS && ball_y < (rows-BALL_RADIUS)  ){
+  }
 
-         if( ball_x <= (p1_x + BALL_RADIUS) && ball_y >= p1_y_top && ball_y <= p1_y_bot){
-                  dir = 4;
-         }else{    
-                 newBallCentX = ball_x - vel;
-                 newBallCentY = ball_y + vel;
-         }
+  else if ( dir == 2 &&
+            ball_x > BALL_RADIUS &&
+            ball_y < (rows-BALL_RADIUS)) {
 
-    } else if (dir == 3 &&  ball_x < (cols-BALL_RADIUS) && ball_y > BALL_RADIUS    ){
+    if( ball_x <= (p1_x + BALL_RADIUS) &&
+        ball_y >= p1_y_top &&
+        ball_y <= p1_y_bot) {
+      dir = 4;
+    }
 
-         if( (ball_x + BALL_RADIUS) >= p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot){
-                  dir = 1;
-         }else{    
-                 newBallCentX = ball_x + vel;
-                 newBallCentY = ball_y - vel;
-         }
+    else {
+      newBallCentX = ball_x - vel;
+      newBallCentY = ball_y + vel;
+    }
 
-    } else if (dir == 4 &&  ball_x < (cols - BALL_RADIUS) && ball_y < (rows - BALL_RADIUS)  ){
+  }
 
-         if( (ball_x + BALL_RADIUS) >= p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot){
-                  dir = 2;
-         }else{    
-                 newBallCentX = ball_x + vel;
-                 newBallCentY = ball_y + vel;
-         }
+  else if ( dir == 3 &&
+            ball_x < (cols-BALL_RADIUS) &&
+            ball_y > BALL_RADIUS) {
 
-    } else { //ball is out of bounds
-		//if ball hits the left or right edge start the ball from the center
-		if (ball_x <= (BALL_RADIUS) || ball_x >= ( cols - BALL_RADIUS) ) { //ball hits left edge, start from center
+  if((ball_x + BALL_RADIUS) >= p2_x &&
+      ball_y >= p2_y_top &&
+      ball_y <= p2_y_bot) {
+    dir = 1;
+    }
+
+    else {    
+      newBallCentX = ball_x + vel;
+      newBallCentY = ball_y - vel;
+    }
+
+  }
+
+  else if ( dir == 4 &&
+            ball_x < (cols - BALL_RADIUS) &&
+            ball_y < (rows - BALL_RADIUS)) {
+
+    if( (ball_x + BALL_RADIUS) >= p2_x &&
+        ball_y >= p2_y_top &&
+        ball_y <= p2_y_bot) {
+      dir = 2;
+    }
+
+    else {    
+      newBallCentX = ball_x + vel;
+      newBallCentY = ball_y + vel;
+    }
+
+  }
+
+  else { // ball is out of bounds
+    // if ball hits the left or right edge start the ball from the center
+    if (ball_x <= (BALL_RADIUS) ||
+        ball_x >= ( cols - BALL_RADIUS)) { // ball hits left edge, start from center
 			newBallCentX = 700;
 			newBallCentY = 500;
 			dir = 3;
 		}
 
-		else {//ball hits the top or bottom edge
+		else { // ball hits the top or bottom edge
 			
-			if(dir == 1 || dir ==3) {// ball is moving up, move ball center to be within bounds, change direction to move down
-                newBallCentY = BALL_RADIUS + vel;
-				++dir;
-			}
-            else { //ball is moving down, move ball center to within bounds, change direction to move up
-                newBallCentY = rows - BALL_RADIUS - vel;
-                --dir; 
-			}
-		}
+			if(dir == 1 || dir == 3) { // ball is moving up, move ball center to be within bounds, change direction to move down
+        newBallCentY = BALL_RADIUS + vel;
+        ++dir;
+      }
+
+      else { // ball is moving down, move ball center to within bounds, change direction to move up
+        newBallCentY = rows - BALL_RADIUS - vel;
+        --dir; 
+      }
+    }
 		
-    } 
+  } 
     
-    //pack the ball center information into one variable
-    BallCenter(10,0) = newBallCentX;
-    BallCenter(21,11) = newBallCentY;
-    
-    return BallCenter;
+  //pack the ball center information into one variable
+  BallCenter(10,0) = newBallCentX;
+  BallCenter(21,11) = newBallCentY;
+  return BallCenter;
        
 }
+
 
 /*
  * Takes a grayscale image and computes XY coordinates of the center of both blobs.
@@ -253,9 +288,10 @@ void compute_center(GRAY_IMAGE& input, GRAY_IMAGE& output, hls::stream< ap_uint<
 
   left_center = (left_min_row + left_max_row) >> 1;
   right_center = (right_min_row + right_max_row) >> 1;
+
   //calculate new ball position
   ballCenter = compute_ball(left_center, right_center, prevBallCenter, rows, cols);
-   
+
   ap_uint<11> left_RAW_buffer;
   ap_uint<11> right_RAW_buffer;
   ap_uint<22> ball_RAW_buffer;
@@ -263,7 +299,7 @@ void compute_center(GRAY_IMAGE& input, GRAY_IMAGE& output, hls::stream< ap_uint<
   left_RAW_buffer = left_center;
   right_RAW_buffer = right_center;
   ball_RAW_buffer = ballCenter;
- 
+
   prev_left_center = left_RAW_buffer;
   prev_right_center = right_RAW_buffer;
   prevBallCenter = ball_RAW_buffer;
@@ -285,7 +321,7 @@ void draw_output(GRAY_IMAGE& input, hls::stream< ap_uint<44> >&paddle_stream, GR
   ap_uint<11> right_lft_bound = cols - PADDLE_X_OFFSET - HALF_PADDLE_WIDTH;
   ap_uint<11> right_rgt_bound = cols - PADDLE_X_OFFSET + HALF_PADDLE_WIDTH;
 
-  //streamed data initialization
+  // streamed data initialization
   ap_uint<44> paddle_centers;
   ap_uint<11> left_center;
   ap_uint<11> right_center;
@@ -294,12 +330,13 @@ void draw_output(GRAY_IMAGE& input, hls::stream< ap_uint<44> >&paddle_stream, GR
 
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
+
 #pragma HLS PIPELINE
 
       input >> pixel_in;
 
       paddle_centers = paddle_stream.read();
-      //unpack the data from the stream
+      // unpack the data from the stream
       left_center = paddle_centers(10,0);
       right_center = paddle_centers(21,11);
       ballCenterX = paddle_centers(32,22);
@@ -321,11 +358,11 @@ void draw_output(GRAY_IMAGE& input, hls::stream< ap_uint<44> >&paddle_stream, GR
       ap_uint<11> right_top_bound = right_center - HALF_PADDLE_HEIGHT;
       ap_uint<11> right_bot_bound = right_center + HALF_PADDLE_HEIGHT;
       
-	  // compute ball boundary 
-	  ap_uint<11> ball_left_bound = ballCenterX - BALL_RADIUS;
-	  ap_uint<11> ball_right_bound = ballCenterX + BALL_RADIUS; 
-	  ap_uint<11> ball_top_bound = ballCenterY - BALL_RADIUS;
-	  ap_uint<11> ball_bot_bound = ballCenterY + BALL_RADIUS;
+      // compute ball boundary 
+      ap_uint<11> ball_left_bound = ballCenterX - BALL_RADIUS;
+      ap_uint<11> ball_right_bound = ballCenterX + BALL_RADIUS; 
+      ap_uint<11> ball_top_bound = ballCenterY - BALL_RADIUS;
+      ap_uint<11> ball_bot_bound = ballCenterY + BALL_RADIUS;
 	  
       // draw left paddle
       if (i > left_top_bound &&
@@ -346,18 +383,17 @@ void draw_output(GRAY_IMAGE& input, hls::stream< ap_uint<44> >&paddle_stream, GR
       else if (i > ball_top_bound &&
                i < ball_bot_bound &&
                j > ball_left_bound &&
-               j < ball_right_bound ) {
-        pixel_out.val[0] = 255;
-	  }
+               j < ball_right_bound )
+      pixel_out.val[0] = 255;
 
-       // if no game element, draw black pixel
-       else
-         pixel_out.val[0] = 0;
+      // if no game element, draw black pixel
+      else
+        pixel_out.val[0] = 0;
 
-     output << pixel_out;
+      output << pixel_out;
 
-     } // end inner for loop
-   } // end outer for loop
+    } // end inner for loop
+  } // end outer for loop
 } // end function
 
 
