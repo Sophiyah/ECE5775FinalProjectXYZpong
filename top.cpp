@@ -161,42 +161,23 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
                  newBallCentY = ball_y + vel;
          }
 
-    } else { 
+    } else { //ball is out of bounds
 		//if ball hits the left or right edge start the ball from the center
 		if (ball_x <= (BALL_RADIUS) || ball_x >= ( cols - BALL_RADIUS) ) { //ball hits left edge, start from center
 			newBallCentX = 700;
 			newBallCentY = 500;
 			dir = 3;
 		}
-		//~ else if ( ball_x >= ( cols - BALL_RADIUS) ) { //ball hits right edge and moves past the paddle, start from center
-			//~ newBallCentX = 700;
-			//~ newBallCentY = 500;
-			//~ dir = 1;
-		//~ }
-		
-		else if ( ball_y <= BALL_RADIUS ) {//ball hits the top edge
+
+		else {//ball hits the top or bottom edge
 			
-			if(dir == 1) {// ball is moving up and left, move ball center to be within bounds, change direction to move down and left
-				newBallCentX = ball_x - vel;
+			if(dir == 1 || dir ==3) {// ball is moving up, move ball center to be within bounds, change direction to move down
                 newBallCentY = BALL_RADIUS + vel;
-				dir = 2;
+				++dir;
 			}
-			else { //ball is moving up and right, change direction to move down and right
-				newBallCentX = ball_x + vel;
-                newBallCentY = BALL_RADIUS + vel;
-				dir = 4;
-			}
-		}
-		else { //ball hits the bottom edge
-			if(dir == 2) { //ball is moving down and left, change direction to move up and left
-				newBallCentX = ball_x - vel;
+            else { //ball is moving down, move ball center to within bounds, change direction to move up
                 newBallCentY = rows - BALL_RADIUS - vel;
-                dir = 1; 
-            }
-            else { //ball is moving down and right, change direction to move up and right
-				newBallCentX = ball_x + vel;
-                newBallCentY = rows - BALL_RADIUS - vel;
-                dir = 3; 
+                --dir; 
 			}
 		}
 		
@@ -234,7 +215,7 @@ void compute_center(GRAY_IMAGE& input, GRAY_IMAGE& output, hls::stream< ap_uint<
   //static variables that hold value from iteration to iteration
   static ap_uint<11> prev_left_center;
   static ap_uint<11> prev_right_center;
-  static ap_uint<22> prevBallCenter= 1331580; //start the ball somewhere in the middle
+  static ap_uint<22> prevBallCenter= 819800; //start the ball somewhere in the middle
 
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
@@ -333,16 +314,6 @@ void draw_output(GRAY_IMAGE& input, hls::stream< ap_uint<44> >&paddle_stream, GR
         right_center = HALF_PADDLE_HEIGHT;
       if (right_center > rows - HALF_PADDLE_HEIGHT)
         right_center = rows - HALF_PADDLE_HEIGHT;
-        
-      //~ // if ball centers are at the bounds, assign new values to prevent overflow
-      //~ if (ballCenterX < BALL_RADIUS)
-        //~ ballCenterX = BALL_RADIUS;
-      //~ if (ballCenterX > cols - BALL_RADIUS) 
-        //~ ballCenterX = cols - BALL_RADIUS;
-      //~ if (ballCenterY < BALL_RADIUS)
-        //~ ballCenterY = BALL_RADIUS;
-      //~ if (ballCenterY > rows - BALL_RADIUS)
-        //~ ballCenterY = rows - BALL_RADIUS;
  
       // compute paddle dimensions based on the centers
       ap_uint<11> left_top_bound = left_center - HALF_PADDLE_HEIGHT;
