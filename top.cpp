@@ -103,8 +103,8 @@ void color_filter(RGB_IMAGE& input, GRAY_IMAGE& output) {
 ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, ap_uint<22> prevBallCenter, int rows, int cols) { 
 
   //new ball center initialization
-  ap_uint<11> newBallCentX=1000;
-  ap_uint<11> newBallCentY=600; 
+  ap_uint<11> newBallCentX=prevBallCenter(10,0);
+  ap_uint<11> newBallCentY=prevBallCenter(21,11); 
   
   //initialize ball logic variables   
   ap_uint<11> ball_x = prevBallCenter(10,0);
@@ -124,7 +124,6 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
 
     static ap_uint<3> dir = 2; //This will keep track of the circles direction
             //1= up and left, 2 = down and left, 3 = up and right, 4 = down and right
-    
 
     if (dir == 1 && ball_x > BALL_RADIUS && ball_y > BALL_RADIUS){
      
@@ -164,16 +163,16 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
 
     } else { 
 		//if ball hits the left or right edge start the ball from the center
-		if (ball_x <= (p1_x + BALL_RADIUS)) { //ball hits left edge, start from center
+		if (ball_x <= (BALL_RADIUS) || ball_x >= ( cols - BALL_RADIUS) ) { //ball hits left edge, start from center
 			newBallCentX = 700;
 			newBallCentY = 500;
 			dir = 3;
 		}
-		else if ( (ball_x + BALL_RADIUS) >= p2_x ) { //ball hits right edge and moves past the paddle, start from center
-			newBallCentX = 700;
-			newBallCentY = 500;
-			dir = 1;
-		}
+		//~ else if ( ball_x >= ( cols - BALL_RADIUS) ) { //ball hits right edge and moves past the paddle, start from center
+			//~ newBallCentX = 700;
+			//~ newBallCentY = 500;
+			//~ dir = 1;
+		//~ }
 		
 		else if ( ball_y <= BALL_RADIUS ) {//ball hits the top edge
 			
@@ -189,19 +188,18 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
 			}
 		}
 		else { //ball hits the bottom edge
-			
 			if(dir == 2) { //ball is moving down and left, change direction to move up and left
 				newBallCentX = ball_x - vel;
-                newBallCentY = BALL_RADIUS - vel;
+                newBallCentY = rows - BALL_RADIUS - vel;
                 dir = 1; 
             }
             else { //ball is moving down and right, change direction to move up and right
 				newBallCentX = ball_x + vel;
-                newBallCentY = BALL_RADIUS - vel;
+                newBallCentY = rows - BALL_RADIUS - vel;
                 dir = 3; 
 			}
 		}
-
+		
     } 
     
     //pack the ball center information into one variable
@@ -236,7 +234,7 @@ void compute_center(GRAY_IMAGE& input, GRAY_IMAGE& output, hls::stream< ap_uint<
   //static variables that hold value from iteration to iteration
   static ap_uint<11> prev_left_center;
   static ap_uint<11> prev_right_center;
-  static ap_uint<22> prevBallCenter= 819450; //start the ball somewhere in the middle
+  static ap_uint<22> prevBallCenter= 1331580; //start the ball somewhere in the middle
 
   for (HLS_SIZE_T i=0; i<rows; i++) {
     for (HLS_SIZE_T j=0; j<cols; j++) {
@@ -336,15 +334,15 @@ void draw_output(GRAY_IMAGE& input, hls::stream< ap_uint<44> >&paddle_stream, GR
       if (right_center > rows - HALF_PADDLE_HEIGHT)
         right_center = rows - HALF_PADDLE_HEIGHT;
         
-      // if ball centers are at the bounds, assign new values to prevent overflow
-      if (ballCenterX < BALL_RADIUS)
-        ballCenterX = BALL_RADIUS;
-      if (ballCenterX > cols - BALL_RADIUS) 
-        ballCenterX = cols - BALL_RADIUS;
-      if (ballCenterY < BALL_RADIUS)
-        ballCenterY = BALL_RADIUS;
-      if (ballCenterY > rows - BALL_RADIUS)
-        ballCenterY = rows - BALL_RADIUS;
+      //~ // if ball centers are at the bounds, assign new values to prevent overflow
+      //~ if (ballCenterX < BALL_RADIUS)
+        //~ ballCenterX = BALL_RADIUS;
+      //~ if (ballCenterX > cols - BALL_RADIUS) 
+        //~ ballCenterX = cols - BALL_RADIUS;
+      //~ if (ballCenterY < BALL_RADIUS)
+        //~ ballCenterY = BALL_RADIUS;
+      //~ if (ballCenterY > rows - BALL_RADIUS)
+        //~ ballCenterY = rows - BALL_RADIUS;
  
       // compute paddle dimensions based on the centers
       ap_uint<11> left_top_bound = left_center - HALF_PADDLE_HEIGHT;
