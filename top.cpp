@@ -123,19 +123,18 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
   ap_uint<11> p2_y_top = pCenters_right - HALF_PADDLE_HEIGHT;
   ap_uint<11> p2_y_bot = pCenters_right + HALF_PADDLE_HEIGHT;
 
-  // 1 = up and left, 2 = down and left, 3 = up and right, 4 = down and right
-  static ap_uint<3> dir = 2; // This will keep track of the circles direction
+  // 0 = up and left, 1 = down and left, 2 = up and right, 3 = down and right
+  static ap_uint<2> dir = 1; // This will keep track of the circles direction
 
-  if (dir == 1 &&
+  if (dir == 0 &&
       ball_x > BALL_RADIUS &&
       ball_y > BALL_RADIUS) {
      
     if( ball_x <= (p1_x + BALL_RADIUS) &&
         ball_y >= p1_y_top &&
         ball_y <= p1_y_bot) {
-      dir = 3;
+      dir = 2;
     }
-
     else {    
       newBallCentX = ball_x - vel;
       newBallCentY = ball_y - vel;
@@ -143,55 +142,49 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
               
   }
 
-  else if ( dir == 2 &&
+  else if ( dir == 1 &&
             ball_x > BALL_RADIUS &&
             ball_y < (rows-BALL_RADIUS)) {
 
     if( ball_x <= (p1_x + BALL_RADIUS) &&
         ball_y >= p1_y_top &&
         ball_y <= p1_y_bot) {
-      dir = 4;
+      dir = 3;
     }
-
     else {
       newBallCentX = ball_x - vel;
       newBallCentY = ball_y + vel;
     }
-
   }
 
-  else if ( dir == 3 &&
+  else if ( dir == 2 &&
             ball_x < (cols-BALL_RADIUS) &&
             ball_y > BALL_RADIUS) {
 
   if((ball_x + BALL_RADIUS) >= p2_x &&
       ball_y >= p2_y_top &&
       ball_y <= p2_y_bot) {
-    dir = 1;
+    dir = 0;
     }
-
     else {    
       newBallCentX = ball_x + vel;
       newBallCentY = ball_y - vel;
     }
-
   }
 
-  else if ( dir == 4 &&
+  else if ( dir == 3 &&
             ball_x < (cols - BALL_RADIUS) &&
             ball_y < (rows - BALL_RADIUS)) {
 
     if( (ball_x + BALL_RADIUS) >= p2_x &&
         ball_y >= p2_y_top &&
         ball_y <= p2_y_bot) {
-      dir = 2;
+      dir = 1;
     }
-
     else {    
       newBallCentX = ball_x + vel;
       newBallCentY = ball_y + vel;
     }
-
   }
 
   else { // ball is out of bounds
@@ -200,23 +193,20 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
         ball_x >= ( cols - BALL_RADIUS)) { // ball hits left edge, start from center
 			newBallCentX = 700;
 			newBallCentY = 500;
-			dir = 3;
+			dir = 2;
 		}
 
-		else { // ball hits the top or bottom edge
-			
-			if(dir == 1 || dir == 3) { // ball is moving up, move ball center to be within bounds, change direction to move down
+		else { // ball hits the top or bottom edge		
+			if (dir == 0 || dir == 2) { // ball is moving up, move ball center to be within bounds, change direction to move down
         newBallCentY = BALL_RADIUS + vel;
         ++dir;
       }
-
       else { // ball is moving down, move ball center to within bounds, change direction to move up
         newBallCentY = rows - BALL_RADIUS - vel;
         --dir; 
       }
-    }
-		
-  } 
+    }	
+  }
     
   //pack the ball center information into one variable
   BallCenter(10,0) = newBallCentX;
