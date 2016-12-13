@@ -121,67 +121,44 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
   ap_uint<11> p2_y_top = pCenters_right - HALF_PADDLE_HEIGHT;
   ap_uint<11> p2_y_bot = pCenters_right + HALF_PADDLE_HEIGHT;
 
+	//initialize velocity of x and y direction 
+    static ap_int<8> xVel = -vel;
+    static ap_int<8> yVel = vel; 
+   
 
-    static ap_uint<3> dir = 2; //This will keep track of the circles direction
-            //1= up and left, 2 = down and left, 3 = up and right, 4 = down and right
-
-    if (dir == 1 && ball_x > BALL_RADIUS && ball_y > BALL_RADIUS){
-     
-         if( ball_x <= (p1_x + BALL_RADIUS) && ball_y >= p1_y_top && ball_y <= p1_y_bot){
-                  dir = 3;
-         }else{    
-                 newBallCentX = ball_x - vel;
-                 newBallCentY = ball_y - vel;
-         }    
-              
-    } else if (dir == 2 && ball_x > BALL_RADIUS && ball_y < (rows-BALL_RADIUS)  ){
-
-         if( ball_x <= (p1_x + BALL_RADIUS) && ball_y >= p1_y_top && ball_y <= p1_y_bot){
-                  dir = 4;
-         }else{    
-                 newBallCentX = ball_x - vel;
-                 newBallCentY = ball_y + vel;
-         }
-
-    } else if (dir == 3 &&  ball_x < (cols-BALL_RADIUS) && ball_y > BALL_RADIUS    ){
-
-         if( (ball_x + BALL_RADIUS) >= p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot){
-                  dir = 1;
-         }else{    
-                 newBallCentX = ball_x + vel;
-                 newBallCentY = ball_y - vel;
-         }
-
-    } else if (dir == 4 &&  ball_x < (cols - BALL_RADIUS) && ball_y < (rows - BALL_RADIUS)  ){
-
-         if( (ball_x + BALL_RADIUS) >= p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot){
-                  dir = 2;
-         }else{    
-                 newBallCentX = ball_x + vel;
-                 newBallCentY = ball_y + vel;
-         }
-
-    } else { //ball is out of bounds
+    if ( ball_x <= (p1_x + BALL_RADIUS) && ball_y >= p1_y_top && ball_y <= p1_y_bot ) { // collide paddle left
+		xVel = -xVel; 
+		newBallCentX = ball_x + BALL_RADIUS + xVel;
+        newBallCentY = ball_y + yVel;
+	}
+	else if ( (ball_x + BALL_RADIUS) >= p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot ) {//collide right paddle
+		xVel = -xVel;
+		newBallCentX = ball_x - BALL_RADIUS + xVel;
+        newBallCentY = ball_y + yVel;
+	}
+	else if (ball_x <= (BALL_RADIUS) || ball_x >= ( cols - BALL_RADIUS) ) { //ball is out of bounds on sides
 		//if ball hits the left or right edge start the ball from the center
-		if (ball_x <= (BALL_RADIUS) || ball_x >= ( cols - BALL_RADIUS) ) { //ball hits left edge, start from center
-			newBallCentX = 700;
-			newBallCentY = 500;
-			dir = 3;
-		}
-
-		else {//ball hits the top or bottom edge
-			
-			if(dir == 1 || dir ==3) {// ball is moving up, move ball center to be within bounds, change direction to move down
-                newBallCentY = BALL_RADIUS + vel;
-				++dir;
-			}
-            else { //ball is moving down, move ball center to within bounds, change direction to move up
-                newBallCentY = rows - BALL_RADIUS - vel;
-                --dir; 
-			}
-		}
-		
-    } 
+		newBallCentX = 700;
+		newBallCentY = 500;
+		xVel = -xVel;
+		yVel = yVel; 
+	}
+	else if (ball_y <= BALL_RADIUS) {//ball hits the top edge
+		// ball is moving up, move ball center to be within bounds, change direction to move down
+        yVel = -yVel;        
+		newBallCentX = ball_x + xVel;
+        newBallCentY = ball_y + yVel;
+	}
+	else if (ball_y >= (rows - BALL_RADIUS) ) { //ball hits the bottom edge
+		//ball is moving down, move ball center to within bounds, change direction to move up
+        yVel = -yVel;        
+		newBallCentX = ball_x + xVel;
+        newBallCentY = ball_y + yVel;
+	}
+	else {// no collision and continue on
+		newBallCentX = ball_x + xVel;
+        newBallCentY = ball_y + yVel;
+	} //end if statement
     
     //pack the ball center information into one variable
     BallCenter(10,0) = newBallCentX;
@@ -189,7 +166,7 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
     
     return BallCenter;
        
-}
+}//end function 
 
 /*
  * Takes a grayscale image and computes XY coordinates of the center of both blobs.
