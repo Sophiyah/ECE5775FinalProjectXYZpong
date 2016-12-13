@@ -98,10 +98,10 @@ void color_filter(RGB_IMAGE& input, GRAY_IMAGE& output) {
 
 
 /*
- * This function handles the ball movement, including paddle collisions and out of bounds (game over) conditions.
+ * This function handles the ball movement, including paddle collisions and out of 
+ * bounds (game over) conditions.
  */
 ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, ap_uint<22> prevBallCenter, int rows, int cols) { 
-
 #pragma HLS PIPELINE
 
   // new ball center initialization
@@ -124,54 +124,65 @@ ap_uint<22> compute_ball(ap_uint<11> pCenters_left, ap_uint<11> pCenters_right, 
   ap_uint<11> p2_y_bot = pCenters_right + HALF_PADDLE_HEIGHT;
 
 	//initialize velocity of x and y direction 
-    static ap_int<8> xVel = -vel;
-    static ap_int<8> yVel = vel; 
-   
+  static ap_int<8> xVel = -vel;
+  static ap_int<8> yVel = vel; 
 
-    if ( ball_x <= (p1_x + BALL_RADIUS) && ball_y >= p1_y_top && ball_y <= p1_y_bot ) { // collide paddle left
-		xVel = -xVel; 
-		newBallCentX = ball_x + BALL_RADIUS + xVel;
-        newBallCentY = ball_y + yVel;
+  // left paddle collision
+  if (ball_x <= (p1_x + BALL_RADIUS) &&
+      ball_y >= p1_y_top &&
+      ball_y <= p1_y_bot) {
+    xVel = -xVel; 
+    newBallCentX = ball_x + BALL_RADIUS + xVel;
+    newBallCentY = ball_y + yVel;
 	}
-	else if ( (ball_x + BALL_RADIUS) >= p2_x && ball_y >= p2_y_top && ball_y <= p2_y_bot ) {//collide right paddle
-		xVel = -xVel;
-		newBallCentX = ball_x - BALL_RADIUS + xVel;
-        newBallCentY = ball_y + yVel;
+
+  // right paddle collision
+  else if ( (ball_x + BALL_RADIUS) >= p2_x &&
+            ball_y >= p2_y_top &&
+            ball_y <= p2_y_bot) {
+    xVel = -xVel;
+    newBallCentX = ball_x - BALL_RADIUS + xVel;
+    newBallCentY = ball_y + yVel;
 	}
-	else if (ball_x <= (BALL_RADIUS) || ball_x >= ( cols - BALL_RADIUS) ) { //ball is out of bounds on sides
-		//if ball hits the left or right edge start the ball from the center
+
+  // out of bounds on left or right walls
+  else if ( ball_x <= (BALL_RADIUS) ||
+            ball_x >= ( cols - BALL_RADIUS)) {
+		// if ball hits the left or right edge start the ball from the center
 		newBallCentX = 700;
 		newBallCentY = 500;
 		xVel = -xVel;
 		yVel = yVel; 
 	}
-	else if (ball_y <= BALL_RADIUS) {//ball hits the top edge
+
+  // top wall collision
+	else if (ball_y <= BALL_RADIUS) {
 		// ball is moving up, move ball center to be within bounds, change direction to move down
-        yVel = -yVel;        
+    yVel = -yVel;        
 		newBallCentX = ball_x + xVel;
-        newBallCentY = ball_y + yVel;
+    newBallCentY = ball_y + yVel;
 	}
-	else if (ball_y >= (rows - BALL_RADIUS) ) { //ball hits the bottom edge
-		//ball is moving down, move ball center to within bounds, change direction to move up
-        yVel = -yVel;        
+
+  // bottom wall collision
+	else if (ball_y >= (rows - BALL_RADIUS)) {
+		// ball is moving down, move ball center to within bounds, change direction to move up
+    yVel = -yVel;        
 		newBallCentX = ball_x + xVel;
-        newBallCentY = ball_y + yVel;
+    newBallCentY = ball_y + yVel;
 	}
-	else {// no collision and continue on
+
+  // no collision
+	else {
 		newBallCentX = ball_x + xVel;
-        newBallCentY = ball_y + yVel;
-	} //end if statement
-    
-    //pack the ball center information into one variable
-    BallCenter(10,0) = newBallCentX;
-    BallCenter(21,11) = newBallCentY;
-    
+    newBallCentY = ball_y + yVel;
+	}
+
   //pack the ball center information into one variable
   BallCenter(10,0) = newBallCentX;
   BallCenter(21,11) = newBallCentY;
   return BallCenter;
        
-}//end function 
+} // end function
 
 
 /*
@@ -224,10 +235,8 @@ void compute_center(GRAY_IMAGE& input, GRAY_IMAGE& output, hls::stream< ap_uint<
           right_min_row = i;
         if (i > right_max_row)
           right_max_row = i;
-
       }
 
-      //pixel_out.val[0] = pixel_in.val[0];
       pixel_out.val[0] = 0;
       output << pixel_out;
 
@@ -331,7 +340,7 @@ void draw_output(GRAY_IMAGE& input, hls::stream< ap_uint<44> >&paddle_stream, GR
       else if (i > ball_top_bound &&
                i < ball_bot_bound &&
                j > ball_left_bound &&
-               j < ball_right_bound )
+               j < ball_right_bound)
       pixel_out.val[0] = 255;
 
       // if no game element, draw black pixel
@@ -346,9 +355,10 @@ void draw_output(GRAY_IMAGE& input, hls::stream< ap_uint<44> >&paddle_stream, GR
 
 
 /*
- * This is the main image processing function called in test.cp.
+ * This is the main image processing function.
  */
 void image_filter(AXI_STREAM& input, AXI_STREAM& output, int rows, int cols) {
+
   //Create AXI streaming interfaces for the core
   #pragma HLS RESOURCE variable=input core=AXIS metadata="-bus_bundle INPUT_STREAM"
   #pragma HLS RESOURCE variable=output core=AXIS metadata="-bus_bundle OUTPUT_STREAM"
